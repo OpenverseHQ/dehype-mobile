@@ -8,6 +8,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import BlogsScreen from './src/screens/BlogScreen';
 import LeaderboardScreen from './src/screens/LeaderboardScreen';
 import NotifiScreen from './src/screens/NotifiScreen';
+import UserScreen from './src/screens/UserScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,6 +16,7 @@ function MyTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
@@ -57,7 +59,7 @@ function MyTabs() {
       <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Tab.Screen name="Blogs" component={BlogsScreen} />
       <Tab.Screen name="Notification" component={NotifiScreen} />
-      <Tab.Screen name="User" component={SettingsScreen} />
+      <Tab.Screen name="User" component={UserScreen} />
     </Tab.Navigator>
   );
 }

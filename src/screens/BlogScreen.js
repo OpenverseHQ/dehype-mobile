@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TextInput, Image } from 'react-native';
 import BlogItem from '../components/BlogItem';
-
+import Icon from 'react-native-vector-icons/Ionicons'; 
 
 const BlogsScreen = () => {
   const [blogs, setBlogs] = useState([]);
@@ -41,7 +41,7 @@ const BlogsScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Image source={{ uri: 'https://via.placeholder.com/40' }} style={styles.logo} />
         <TextInput
           style={styles.searchInput}
@@ -49,6 +49,10 @@ const BlogsScreen = () => {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+      </View> */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Blogs</Text>
+        <Icon name="book-outline" size={28} color="#4b7bec" />
       </View>
 
       {/* Blog List */}
@@ -64,13 +68,22 @@ const BlogsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#fff',
+    padding: 15,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    marginBottom: 10,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginRight: 10,
   },
   logo: {
     width: 40,
