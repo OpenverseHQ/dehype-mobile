@@ -181,7 +181,7 @@ const FilterScreen = ({ navigation }: any) => {
             // Sắp xếp theo order được chọn
             return sortOption === 'Newest' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
           });
-          navigation.navigate('FilterResult', { filteredMarkets: sortedMarkets });
+          navigation.navigate('FilterResult', { filteredMarkets });
         }}
       >
         <Text style={styles.buttonText}>Show Markets</Text>

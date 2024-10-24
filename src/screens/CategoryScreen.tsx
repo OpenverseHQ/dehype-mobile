@@ -42,7 +42,6 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
                         traders={market.traders}
                         volume={market.volume}
                         liquidity={market.liquidity}
-                        
                     />
                 ))}
             </ScrollView>

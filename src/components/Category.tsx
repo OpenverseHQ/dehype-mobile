@@ -1,26 +1,32 @@
-import { Text, StyleSheet, View, ScrollView, TouchableOpacity, Image } from 'react-native'
-import React, { Component } from 'react'
+import React from 'react';
+import { TouchableOpacity, Text, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-interface myProps {
-    nameCategory: string;
-  }
-  
-  const Category: React.FC<myProps> = ({ nameCategory }) => {
-    const navigation = useNavigation(); 
-  
-    const handlePress = () => {
-      navigation.navigate('Category', { category: nameCategory });
-    };
-  
-    return (
-      <TouchableOpacity style={styles.categoryItem} onPress={handlePress}>
-        <Image style={styles.image} source={require('../../assets/sport.png')} />
-        <Text style={styles.text}>{nameCategory}</Text>
-      </TouchableOpacity>
-    );
+type RootStackParamList = {
+  Category: { category: string };
+};
+
+type CategoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Category'>;
+
+interface MyProps {
+  nameCategory: string;
+}
+
+const Category: React.FC<MyProps> = ({ nameCategory }) => {
+  const navigation = useNavigation<CategoryScreenNavigationProp>();
+
+  const handlePress = () => {
+    navigation.navigate('Category', { category: nameCategory });
   };
-  
+
+  return (
+    <TouchableOpacity style={styles.categoryItem} onPress={handlePress}>
+      <Image style={styles.image} source={require('../../assets/sport.png')} />
+      <Text style={styles.text}>{nameCategory}</Text>
+    </TouchableOpacity>
+  );
+};
 
 export default Category;
 

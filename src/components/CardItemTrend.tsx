@@ -1,54 +1,67 @@
-import { Text, StyleSheet, View, TouchableOpacity, Image } from 'react-native';
-import React from 'react';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-
-interface CardItems {
-    nameMarket: string;
-    outcome: string;
-    percent: number;
-    LikeCount:number
+interface Outcome {
+    [key: string]: string;
 }
 
-const CardItemTrend: React.FC<CardItems> = ({ nameMarket, outcome, percent, LikeCount }) => {
-    const [isLiked, setIsLiked] = useState(false);
+interface CardItems {
+    id:number;
+    nameMarket: string;
+    outcome: Outcome;
+    LikeCount: number;
+}
 
+const CardItemTrend: React.FC<CardItems> = ({ id, nameMarket, outcome, LikeCount }) => {
+    const navigation = useNavigation();
+    const [isLiked, setIsLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(LikeCount);
 
     const toggleHeartColor = () => {
         setIsLiked(!isLiked);
-        setLikeCount(likeCount + (isLiked ? -1 : 1)); 
+        setLikeCount(likeCount + (isLiked ? -1 : 1));
     };
 
     return (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('DetailMarket', { id })}>
             <View style={styles.cardHeader}>
                 <Image source={require('../../assets/Male_User.png')} />
                 <Text style={styles.cardTitle}>{nameMarket}</Text>
-
                 <TouchableOpacity onPress={toggleHeartColor}>
-                    <Icon 
-                        name='heart' 
-                        color={isLiked ? 'red' : '#E5E7EB'}  
-                        size={16}  
-                        style={{ marginLeft: 45 }} 
+                    <Icon
+                        name='heart'
+                        color={isLiked ? 'red' : '#E5E7EB'}
+                        size={16}
+                        style={{ marginLeft: 90 }}
                     />
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.progressBarContainer}>
-                <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${percent}%` }]}>
-                        <Text>{outcome}</Text>
-                    </View>
-                    <Text style={styles.percentage}>{percent}%</Text>
-                </View>
-            </View>
+            <ScrollView style={styles.progressBarContainer} showsVerticalScrollIndicator={false}>
+                {Object.entries(outcome).map(([key, value]) => {
+                    const percentage = parseFloat(value);
+                    const width = `${percentage}%`;
+
+                    return (
+                        <View key={key} style={styles.progressBar}>
+
+                            <View style={styles.progressBarWrapper}>
+                                <View style={[styles.progressFill, { width }]}>
+                                    <Text style={styles.outcomeText}>{key}</Text>
+                                </View>
+                                <Text style={styles.percentageText}>{value}</Text>
+
+                            </View>
+                        </View>
+                    );
+                })}
+            </ScrollView>
 
             <Text style={styles.footerText}>
-                Ended Sep 27 | 2 outcomes 
-                <Text style={styles.heartIcon}>    ❤️ {likeCount}</Text>
+                Ended Sep 27 | {Object.keys(outcome).length} outcomes
+                <Text style={styles.heartIcon}>            ❤️ {likeCount}</Text>
             </Text>
         </TouchableOpacity>
     );
@@ -58,10 +71,9 @@ export default CardItemTrend;
 
 const styles = StyleSheet.create({
     card: {
-        width: 220,
+        width: 250,
         padding: 10,
         margin: 10,
-        marginLeft: 1,
         borderRadius: 10,
         backgroundColor: '#fff',
         shadowColor: '#000',
@@ -71,7 +83,6 @@ const styles = StyleSheet.create({
         elevation: 4,
         justifyContent: 'center',
     },
-
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -80,39 +91,43 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginLeft: 10
+        marginLeft: 10,
     },
     progressBarContainer: {
         marginBottom: 5,
+        maxHeight: 100, // Đặt chiều cao tối đa để có thể cuộn nếu cần
     },
     progressBar: {
-        flexDirection: 'row',
         height: 30,
-        width: '100%',
+        marginVertical: 5,
+        justifyContent: 'center',
+    },
+    progressBarWrapper: {
+        height: '100%',
         backgroundColor: '#E5E7EB',
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingRight: 5
+        borderRadius: 5,
+        overflow: 'hidden',
+        flexDirection: 'row',
+        justifyContent:'space-between',
+        alignItems:'center'
     },
     progressFill: {
-        backgroundColor: '#A7C7E7',
         height: '100%',
-        borderTopLeftRadius: 10,
-        borderBottomLeftRadius: 10,
-        paddingLeft: 5,
-        justifyContent: 'center'
+        backgroundColor: '#C9DBFF', // Màu sắc của thanh progress
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        paddingLeft:5
     },
-    percentage: {
-        marginLeft: 5,
+    percentageText: {
+        marginRight: 5,
         fontSize: 14,
-        fontWeight: '500',
-    },
-    voteText: {
-        fontSize: 16,
-        color: '#4CAF50',
-        marginBottom: 10,
         fontWeight: 'bold',
+        color: '#000', // Màu chữ bên trong thanh progress
+    },
+    outcomeText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 5,
     },
     footerText: {
         fontSize: 12,

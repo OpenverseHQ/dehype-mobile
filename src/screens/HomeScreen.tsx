@@ -6,27 +6,27 @@ import Category from '../components/Category';
 import CardItemTrend from '../components/CardItemTrend';
 import CardItem from '../components/CardItem';
 
-const cardData = [
-  { nameMarket: 'salar hybrid', outcome: 'Yes', percent: 52, cate: '' },
-  { nameMarket: 'salar hybrid', outcome: 'Yes', percent: 55, cate: '' },
-  { nameMarket: 'salar hybrid', outcome: 'Yes', percent: 60, cate: '' },
-  { nameMarket: 'salar hybrid', outcome: 'Yes', percent: 65, cate: '' },
-  { nameMarket: 'salar hybrid', outcome: 'Yes', percent: 70, cate: '' },
-  { nameMarket: 'salar hybrid', outcome: 'Yes', percent: 75, cate: '' }
-];
 
-const HomeScreen = ({ navigation }:any) => {
+const HomeScreen = ({ navigation, route }: any) => {
+
+  const marketData = require('../data.json');
+
+  const filterByCategory = (category: string) => {
+    return marketData.markets.filter((market: any) => market.category === category);
+  };
+
+
   const [selectedTab, setSelectedTab] = useState('Trending');  // Sử dụng useState thay cho this.state
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor:'yellow' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'yellow' }}>
       <Header />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View><Text style={styles.text_cate}>Category</Text></View>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
             <Category nameCategory='Sports' />
-            <Category nameCategory='Technology' />
+            <Category nameCategory='Technology'/>
             <Category nameCategory='Finance' />
             <Category nameCategory='News' />
             <Category nameCategory='Entertaiment' />
@@ -37,13 +37,13 @@ const HomeScreen = ({ navigation }:any) => {
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'Trending' && styles.activeTab]}
-            onPress={() => setSelectedTab('Trending')} 
+            onPress={() => setSelectedTab('Trending')}
           >
             <Text style={styles.tabText}>Trending collections</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'Newest' && styles.activeTab]}
-            onPress={() => setSelectedTab('Newest')} 
+            onPress={() => setSelectedTab('Newest')}
           >
             <Text style={styles.tabText}>Newest</Text>
           </TouchableOpacity>
@@ -54,26 +54,26 @@ const HomeScreen = ({ navigation }:any) => {
             <>
               <CategoryCollection nameCategory='Sports' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItemTrend key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} LikeCount={90} />
+                {filterByCategory('Sports').map((market: any, index: number) => (
+                  <CardItemTrend key={market.id} nameMarket={market.name} outcome={market.outcome} id={market.id} LikeCount={market.likes} />
                 ))}
               </ScrollView>
               <CategoryCollection nameCategory='Technology' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItemTrend key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} LikeCount={90} />
+                {filterByCategory('Technology').map((market: any, index: number) => (
+                  <CardItemTrend key={market.id} nameMarket={market.name} outcome={market.outcome} id={market.id} LikeCount={market.likes} />
                 ))}
               </ScrollView>
               <CategoryCollection nameCategory='Finance' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItemTrend key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} LikeCount={90} />
+                {filterByCategory('Finance').map((market: any, index: number) => (
+                  <CardItemTrend key={market.id} nameMarket={market.name} outcome={market.outcome} id={market.id} LikeCount={market.likes} />
                 ))}
               </ScrollView>
               <CategoryCollection nameCategory='Politics' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItemTrend key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} LikeCount={90} />
+                {filterByCategory('Politics').map((market: any, index: number) => (
+                  <CardItemTrend key={market.id} nameMarket={market.name} outcome={market.outcome} id={market.id} LikeCount={market.likes} />
                 ))}
               </ScrollView>
             </>
@@ -81,21 +81,12 @@ const HomeScreen = ({ navigation }:any) => {
             <>
               <CategoryCollection nameCategory='Entertaiment' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItem key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} cate='Entertaiment'/>
-                ))}
               </ScrollView>
               <CategoryCollection nameCategory='Finance' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItem key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} cate='Finance'/>
-                ))}
               </ScrollView>
               <CategoryCollection nameCategory='News' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-                {cardData.map((item, index) => (
-                  <CardItem key={index} nameMarket={item.nameMarket} outcome={item.outcome} percent={item.percent} cate='News'/>
-                ))}
               </ScrollView>
             </>
           )}

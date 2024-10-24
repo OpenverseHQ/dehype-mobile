@@ -11,6 +11,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import CategoryScreen from './src/screens/CategoryScreen';
 import FilterScreen from './src/screens/FilterScreen';
 import FilterResultScreen from './src/screens/FilterResultScreen';
+import DetailMarketScreen from './src/screens/DetailMarketScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -74,6 +75,7 @@ export default function App() {
         <Stack.Screen name="Category" component={CategoryScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Filter" component={FilterScreen} options={{ headerShown: false }} />
         <Stack.Screen name="FilterResult" component={FilterResultScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="DetailMarket" component={DetailMarketScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
