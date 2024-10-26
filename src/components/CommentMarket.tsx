@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image } from 'react-native';
-import axios from 'axios';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image, Modal, Alert } from 'react-native';
+import api from '../api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
+
+
 
 interface Reply {
   id: string;
@@ -12,7 +17,6 @@ interface Reply {
     avatarUrl: string;
   };
 }
-
 interface Comment {
   id: string;
   username: string;
@@ -34,6 +38,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
   const [replyVisible, setReplyVisible] = useState<{ [key: string]: boolean }>({});
 
+
+  // const { Popover } = renderers;
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -47,27 +53,33 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const data = await response.json();
-          // console.log('Data:', data);  
-          const formattedComments = data.comments.map((comment: any) => ({
-            id: comment.id,
-            username: comment.user.username,
-            avatarUrl: comment.user.avatarUrl,
-            text: comment.comment,
-            createAt: new Date(comment.createdAt).toLocaleString(),
-            updateAt: new Date(comment.updatedAt).toLocaleString(),
-            replies: comment.replies.map((reply: any) => ({
-              id: reply.id,
-              comment: reply.comment,
-              createAt: new Date(reply.createdAt).toLocaleString(),
-              updateAt: new Date(reply.updatedAt).toLocaleString(),
-              user: {
-                username: reply.user.username,
-                avatarUrl: reply.user.avatarUrl
-              }
-            }))
-          }));
 
-          setComments(formattedComments);
+          // Kiểm tra nếu comments tồn tại
+          if (data.comments && Array.isArray(data.comments)) {
+            const formattedComments = data.comments.map((comment: any) => ({
+              id: comment.id,
+              username: comment.user.username,
+              avatarUrl: comment.user.avatarUrl,
+              text: comment.comment,
+              createAt: new Date(comment.createdAt).toLocaleString(),
+              updateAt: new Date(comment.updatedAt).toLocaleString(),
+              // Đảm bảo replies là một mảng
+              replies: Array.isArray(comment.replies) ? comment.replies.map((reply: any) => ({
+                id: reply.id,
+                comment: reply.comment,
+                createAt: new Date(reply.createdAt).toLocaleString(),
+                updateAt: new Date(reply.updatedAt).toLocaleString(),
+                user: {
+                  username: reply.user.username,
+                  avatarUrl: reply.user.avatarUrl
+                }
+              })) : []
+            }));
+
+            setComments(formattedComments);
+          } else {
+            console.error('No comments found or comments are not in an array.');
+          }
         } else {
           console.error('Expected JSON, but got something else:', contentType);
         }
@@ -79,26 +91,41 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     fetchComments();
   }, [idMarket]);
 
+  const handleGetAccess = async () => {
+    const requestBody = {
+      walletAddress: "123412",
+      // walletAddress: "laskdflaskjva234jhas",
+    };
+    const response = await api.post("/auth/login", requestBody, {
+      isPublic: true, // Attach isPublic directly
+    } as any);
 
-
+    console.log(response.data);
+    const { access_token, refresh_token } = response.data;
+    await AsyncStorage.setItem("accessToken", access_token);
+    await AsyncStorage.setItem("refreshToken", refresh_token);
+  };
 
   const handleAddComment = async () => {
-    const newId = comments.length + 1;
     const newCommentObj = {
-      id: newId.toString(),
-      username: "Trần Đình Thắng",
-      avatarUrl: "https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png",
-      text: newComment,
-      createAt: new Date().toLocaleString(),
-      updateAt: new Date().toLocaleString(),
-      replies: [],
+      content: newComment,
     };
-  
     try {
-      const response = await axios.post(`https://dehype.api.dehype.fun/api/v1/markets/${idMarket}/comments`, newCommentObj);
-      
+      const response = await api.post(`/markets/${idMarket}/comments`, newCommentObj);
+
       if (response.status === 200 || response.status === 201) {
-        setComments([newCommentObj, ...comments]);
+
+        const newCommentFormatted: Comment = {
+          id: response.data.id,
+          text: response.data.comment,
+          username: response.data.user?.walletAddress || 'Anonymous',
+          avatarUrl: 'https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png',
+          createAt: new Date(response.data.createdAt).toLocaleString(),
+          updateAt: new Date(response.data.updatedAt).toLocaleString(),
+          replies: [],
+        };
+
+        setComments(prevComments => [newCommentFormatted, ...prevComments]);
         setNewComment('');
       } else {
         console.error('Error saving comment:', response.status, response.data);
@@ -107,6 +134,30 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       console.error('Error adding comment:', error);
     }
   };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const response = await api.delete(`/markets/${idMarket}/comments/${commentId}`);
+  
+      if (response.status === 200 || response.status === 204) {
+        // Xóa comment khỏi danh sách sau khi đã xóa thành công từ server
+        setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+      } else {
+        console.error('Error deleting comment:', response.status, response.data);
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+  
+
+  const handleEdit = () => {
+    // Logic để sửa comment
+  };
+
+
+
+
   const handleReplyPress = (commentId: string) => {
     setReplyVisible(prev => ({ ...prev, [commentId]: true }));
   };
@@ -140,29 +191,55 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
     handleCancelReply(commentId);
   };
-  
+
 
   const renderItem = ({ item }: { item: Comment }) => (
     <View style={styles.commentItem}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+          {/* Kiểm tra avatarUrl trước khi render Image */}
+          {item.avatarUrl ? (
+            <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+          ) : (
+            <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
+          )}
           <Text style={styles.username}> {item.username} </Text>
         </View>
-        <Text style={styles.timeAgo}>{item.createAt}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={styles.timeAgo}>{item.createAt}</Text>
+          <Menu>
+            <MenuTrigger>
+              <Icon size={20} name="dots-horizontal" />
+            </MenuTrigger>
+            <MenuOptions>
+              <MenuOption onSelect={() => handleEdit}>
+                <View style={styles.option}>
+                  <Icon name="update" size={20} />
+                  <Text style={styles.menuText}>Update</Text>
+                </View>
+              </MenuOption>
+              <MenuOption onSelect={() => handleDeleteComment(item.id)}>
+              <View style={styles.option}>
+                  <Icon name="delete" size={20} />
+                  <Text style={styles.menuText}>Delete</Text>
+                </View>
+              </MenuOption>
+            </MenuOptions>
+          </Menu>
+        </View>
+
       </View>
       <Text style={{ marginLeft: 35 }}>{item.text}</Text>
       <TouchableOpacity onPress={() => handleReplyPress(item.id)}>
         <Text style={styles.likeButton}>Reply</Text>
       </TouchableOpacity>
-      
 
       {/* TextInput cho reply */}
       {replyVisible[item.id] && (
         <View style={{ marginLeft: 35, marginTop: 10 }}>
           <TextInput
             style={styles.input}
-            value={replyText[item.id] ?? ''}  
+            value={replyText[item.id] ?? ''}
             onChangeText={text => setReplyText(prev => ({ ...prev, [item.id]: text }))}
             placeholder={`@${item.username}`}
           />
@@ -183,7 +260,12 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         <View key={reply.id} style={{ marginLeft: 20, marginTop: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
+              {/* Kiểm tra avatarUrl của reply trước khi render Image */}
+              {reply.user.avatarUrl ? (
+                <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
+              ) : (
+                <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
+              )}
               <Text style={styles.username}> {reply.user.username} </Text>
             </View>
             <Text style={styles.timeAgo}>{reply.createAt}</Text>
@@ -192,11 +274,11 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         </View>
       ))}
     </View>
-
   );
 
+
   return (
-    <View style={styles.container}>
+    <MenuProvider style={styles.container}>
       <TextInput
         style={styles.input}
         value={newComment}
@@ -218,7 +300,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
       />
-    </View>
+    </MenuProvider>
   );
 };
 
@@ -281,6 +363,7 @@ const styles = StyleSheet.create({
   timeAgo: {
     fontSize: 12,
     color: '#666',
+    marginRight: 8
   },
   likeButton: {
     color: '#007bff',
@@ -292,6 +375,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  menuText: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
 });
+
 
 export default CommentMarketScreen;
