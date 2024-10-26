@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base",
+  //"extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitAny": false,           // Cho phép các kiểu bất kỳ (any) mà không cần khai báo
+    "strictNullChecks": false,        // Cho phép giá trị null hoặc undefined với các kiểu khác
+    "skipLibCheck": true,             // Bỏ qua kiểm tra thư viện (giúp giảm thời gian biên dịch) 
+    "resolveJsonModule": true         // Cho phép import tệp JSON trong TypeScript
+
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "types/**/*.d.ts"]
+}
