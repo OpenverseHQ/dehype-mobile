@@ -37,6 +37,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [holdersOnly, setHoldersOnly] = useState(false);
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
   const [replyVisible, setReplyVisible] = useState<{ [key: string]: boolean }>({});
+  const [editCommentId, setEditCommentId] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState('');
 
 
   // const { Popover } = renderers;
@@ -135,13 +137,28 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     }
   };
 
-  const handleDeleteComment = async (commentId: string) => {
+  const handleDeleteComment = async (parentId: string, replyId?: string) => {
     try {
-      const response = await api.delete(`/markets/${idMarket}/comments/${commentId}`);
-  
+      const targetId = replyId || parentId;
+      const response = await api.delete(`/markets/${idMarket}/comments/${targetId}`);
+
       if (response.status === 200 || response.status === 204) {
-        // Xóa comment khỏi danh sách sau khi đã xóa thành công từ server
-        setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+        setComments(prevComments =>
+          prevComments.map(comment => {
+            if (comment.id === parentId) {
+              // If deleting a reply
+              if (replyId) {
+                return {
+                  ...comment,
+                  replies: comment.replies.filter(reply => reply.id !== replyId),
+                };
+              }
+              // If deleting a main comment
+              return null;
+            }
+            return comment;
+          }).filter(Boolean) as Comment[]
+        );
       } else {
         console.error('Error deleting comment:', response.status, response.data);
       }
@@ -149,12 +166,49 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       console.error('Error deleting comment:', error);
     }
   };
-  
 
-  const handleEdit = () => {
-    // Logic để sửa comment
+
+  const handleUpdateComment = async (parentId: string, updatedText: string, replyId?: string) => {
+    try {
+      // Determine the target comment ID for the API request
+      const targetId = replyId || parentId;
+
+      const response = await api.patch(`/markets/${idMarket}/comments/${targetId}`, {
+        content: updatedText,
+      });
+
+      if (response.status === 200) {
+        setComments(prevComments =>
+          prevComments.map(comment => {
+            if (comment.id === parentId) {
+              // Check if updating the main comment or a reply
+              if (replyId) {
+                return {
+                  ...comment,
+                  replies: comment.replies.map(reply =>
+                    reply.id === replyId ? { ...reply, comment: updatedText } : reply
+                  ),
+                };
+              }
+              return { ...comment, text: updatedText };
+            }
+            return comment;
+          })
+        );
+        setEditCommentId(null);
+      } else {
+        console.error('Error updating comment:', response.status, response.data);
+      }
+    } catch (error) {
+      console.error('Error updating comment:', error);
+    }
   };
 
+
+  const handleEditPress = (commentId: string, currentText: string) => {
+    setEditCommentId(commentId);
+    setEditCommentText(currentText);
+  };
 
 
 
@@ -212,14 +266,14 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               <Icon size={20} name="dots-horizontal" />
             </MenuTrigger>
             <MenuOptions>
-              <MenuOption onSelect={() => handleEdit}>
+              <MenuOption onSelect={() => handleEditPress(item.id, item.text)}>
                 <View style={styles.option}>
                   <Icon name="update" size={20} />
                   <Text style={styles.menuText}>Update</Text>
                 </View>
               </MenuOption>
               <MenuOption onSelect={() => handleDeleteComment(item.id)}>
-              <View style={styles.option}>
+                <View style={styles.option}>
                   <Icon name="delete" size={20} />
                   <Text style={styles.menuText}>Delete</Text>
                 </View>
@@ -229,7 +283,26 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         </View>
 
       </View>
-      <Text style={{ marginLeft: 35 }}>{item.text}</Text>
+      {/* Hiển thị TextInput khi comment ở chế độ chỉnh sửa */}
+      {editCommentId === item.id ? (
+        <View style={{ marginLeft: 35 }}>
+          <TextInput
+            style={styles.input}
+            value={editCommentText}
+            onChangeText={setEditCommentText}
+          />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <TouchableOpacity onPress={() => setEditCommentId(null)}>
+              <Text style={styles.cancelButton}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText)}>
+              <Text style={styles.postButtonTextRep}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <Text style={{ marginLeft: 35 }}>{item.text}</Text>
+      )}
       <TouchableOpacity onPress={() => handleReplyPress(item.id)}>
         <Text style={styles.likeButton}>Reply</Text>
       </TouchableOpacity>
@@ -248,6 +321,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
             <TouchableOpacity onPress={() => handleCancelReply(item.id)}>
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
+            {/* <TouchableOpacity onPress={() => handlePostReply(item.id)}> */}
             <TouchableOpacity onPress={() => handlePostReply(item.id)}>
               <Text style={styles.postButtonTextRep}>Post</Text>
             </TouchableOpacity>
@@ -269,6 +343,25 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               <Text style={styles.username}> {reply.user.username} </Text>
             </View>
             <Text style={styles.timeAgo}>{reply.createAt}</Text>
+            <Menu>
+              <MenuTrigger>
+                <Icon size={20} name="dots-horizontal" />
+              </MenuTrigger>
+              <MenuOptions>
+                <MenuOption onSelect={() => handleUpdateComment(item.id, reply.comment, reply.id)}>
+                  <View style={styles.option}>
+                    <Icon name="update" size={20} />
+                    <Text style={styles.menuText}>Update</Text>
+                  </View>
+                </MenuOption>
+                <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
+                  <View style={styles.option}>
+                    <Icon name="delete" size={20} />
+                    <Text style={styles.menuText}>Delete</Text>
+                  </View>
+                </MenuOption>
+              </MenuOptions>
+            </Menu>
           </View>
           <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
         </View>
