@@ -38,6 +38,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
   const [replyVisible, setReplyVisible] = useState<{ [key: string]: boolean }>({});
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
+  const [editReplyId, setEditReplyId] = useState<string | null>(null); // New state for editing reply comments
   const [editCommentText, setEditCommentText] = useState('');
 
 
@@ -170,9 +171,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
   const handleUpdateComment = async (parentId: string, updatedText: string, replyId?: string) => {
     try {
-      // Determine the target comment ID for the API request
       const targetId = replyId || parentId;
-
       const response = await api.patch(`/markets/${idMarket}/comments/${targetId}`, {
         content: updatedText,
       });
@@ -196,6 +195,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           })
         );
         setEditCommentId(null);
+        setEditReplyId(null); // Clear editReplyId after updating
       } else {
         console.error('Error updating comment:', response.status, response.data);
       }
@@ -205,8 +205,10 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   };
 
 
-  const handleEditPress = (commentId: string, currentText: string) => {
+
+  const handleEditPress = (commentId: string, currentText: string, replyId?: string) => {
     setEditCommentId(commentId);
+    setEditReplyId(replyId || null);
     setEditCommentText(currentText);
   };
 
@@ -221,30 +223,49 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     setReplyText(prev => ({ ...prev, [commentId]: '' }));
   };
 
-  const handlePostReply = (commentId: string) => {
-    const newReply: Reply = {
-      id: (Math.random() * 1000).toString(), // Generate a unique ID for the reply
-      comment: replyText[commentId],
-      createAt: new Date().toLocaleString(),
-      updateAt: new Date().toLocaleString(),
-      user: {
-        username: "Trần Đình Thắng",
-        avatarUrl: "https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png",
-      },
+  const handlePostReply = async (commentId: string) => {
+    const replyContent = replyText[commentId];
+
+    const newReplyObj = {
+      content: replyContent,
     };
 
-    // Update comments with new reply
-    setComments(prevComments => {
-      return prevComments.map(comment => {
-        if (comment.id === commentId) {
-          return { ...comment, replies: [...comment.replies, newReply] };
-        }
-        return comment;
-      });
-    });
+    try {
+      // Gọi API để tạo reply mới
+      const response = await api.post(`/markets/${idMarket}/comments/${commentId}/replies`, newReplyObj);
 
-    handleCancelReply(commentId);
+      if (response.status === 200 || response.status === 201) {
+        const newReply: Reply = {
+          id: response.data.id,
+          comment: response.data.comment,
+          createAt: new Date(response.data.createdAt).toLocaleString(),
+          updateAt: new Date(response.data.updatedAt).toLocaleString(),
+          user: {
+            username: response.data.user?.walletAddress || 'Anonymous',
+            avatarUrl: response.data.user?.avatarUrl || 'https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png',
+          },
+        };
+
+        // Cập nhật danh sách comments với reply mới
+        setComments(prevComments => {
+          return prevComments.map(comment => {
+            if (comment.id === commentId) {
+              return { ...comment, replies: [...comment.replies, newReply] };
+            }
+            return comment;
+          });
+        });
+
+        // Xóa nội dung reply sau khi gửi thành công
+        handleCancelReply(commentId);
+      } else {
+        console.error('Error saving reply:', response.status, response.data);
+      }
+    } catch (error) {
+      console.error('Error posting reply:', error);
+    }
   };
+
 
 
   const renderItem = ({ item }: { item: Comment }) => (
@@ -284,7 +305,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
       </View>
       {/* Hiển thị TextInput khi comment ở chế độ chỉnh sửa */}
-      {editCommentId === item.id ? (
+      {editCommentId === item.id && !editReplyId ? (
         <View style={{ marginLeft: 35 }}>
           <TextInput
             style={styles.input}
@@ -342,28 +363,49 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               )}
               <Text style={styles.username}> {reply.user.username} </Text>
             </View>
-            <Text style={styles.timeAgo}>{reply.createAt}</Text>
-            <Menu>
-              <MenuTrigger>
-                <Icon size={20} name="dots-horizontal" />
-              </MenuTrigger>
-              <MenuOptions>
-                <MenuOption onSelect={() => handleUpdateComment(item.id, reply.comment, reply.id)}>
-                  <View style={styles.option}>
-                    <Icon name="update" size={20} />
-                    <Text style={styles.menuText}>Update</Text>
-                  </View>
-                </MenuOption>
-                <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
-                  <View style={styles.option}>
-                    <Icon name="delete" size={20} />
-                    <Text style={styles.menuText}>Delete</Text>
-                  </View>
-                </MenuOption>
-              </MenuOptions>
-            </Menu>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={styles.timeAgo}>{reply.createAt}</Text>
+              <Menu>
+                <MenuTrigger>
+                  <Icon size={20} name="dots-horizontal" />
+                </MenuTrigger>
+                <MenuOptions>
+                  <MenuOption onSelect={() => handleEditPress(item.id, reply.comment, reply.id)}>
+                    <View style={styles.option}>
+                      <Icon name="update" size={20} />
+                      <Text style={styles.menuText}>Update</Text>
+                    </View>
+                  </MenuOption>
+                  <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
+                    <View style={styles.option}>
+                      <Icon name="delete" size={20} />
+                      <Text style={styles.menuText}>Delete</Text>
+                    </View>
+                  </MenuOption>
+                </MenuOptions>
+              </Menu>
+            </View>
           </View>
-          <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
+          {/* Edit TextInput for reply */}
+          {editCommentId === item.id && editReplyId === reply.id ? (
+            <View style={{ marginLeft: 35 }}>
+              <TextInput
+                style={styles.input}
+                value={editCommentText}
+                onChangeText={setEditCommentText}
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TouchableOpacity onPress={() => setEditCommentId(null)}>
+                  <Text style={styles.cancelButton}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText, reply.id)}>
+                  <Text style={styles.postButtonTextRep}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
+          )}
         </View>
       ))}
     </View>
@@ -456,7 +498,7 @@ const styles = StyleSheet.create({
   timeAgo: {
     fontSize: 12,
     color: '#666',
-    marginRight: 8
+    marginRight: 5
   },
   likeButton: {
     color: '#007bff',
