@@ -1,18 +1,30 @@
 import { Text, StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import api from '../api';
 
-interface CardItems {
-    nameMarket: string;
-    outcome: string;
-    percent: number;
-    cate: string;
-    traders:number;
-    volume:number;
-    liquidity:number
+
+interface AnswerStats {
+    name: string;
+    totalTokens: number;
+    totalVolume: number;
+    percentage: string;
 }
 
-const CardItem: React.FC<CardItems> = ({ nameMarket, outcome, percent, cate, traders, volume, liquidity }) => {
+interface MarketStats {
+    numVoters: number;
+    totalVolume: number;
+    answerStats: AnswerStats[];
+}
+
+interface CardItems {
+    publicKey: string;
+    title: string;
+    coverUrl: string;
+    marketStats: MarketStats;
+}
+
+const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats }) => {
     const [isLiked, setIsLiked] = useState(false);
 
     const toggleHeartColor = () => {
@@ -22,8 +34,8 @@ const CardItem: React.FC<CardItems> = ({ nameMarket, outcome, percent, cate, tra
         <TouchableOpacity style={styles.card}>
             <View style={styles.cardHeader}>
                 <View style={styles.leftSection}>
-                    <Image source={require('../../assets/Male_User.png')} />
-                    <Text style={styles.cardTitle}>{nameMarket}</Text>
+                    <Image source={{ uri: coverUrl }} />
+                    <Text style={styles.cardTitle}>{title}</Text>
                 </View>
                 <TouchableOpacity onPress={toggleHeartColor}>
                     <Icon
@@ -35,19 +47,27 @@ const CardItem: React.FC<CardItems> = ({ nameMarket, outcome, percent, cate, tra
             </View>
 
             <View style={styles.progressBarContainer}>
-                <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${percent}%` }]}>
-                        <Text>{outcome}</Text>
+                {marketStats.answerStats.map((answer, index) => (
+                    
+                    <View key={index} style={styles.progressBar}>
+
+                        <View style={styles.progressBarWrapper}>
+                            <View style={[styles.progressFill, { answer.percentage }]}>
+                                <Text style={styles.outcomeText}>{index}</Text>
+                            </View>
+                            <Text style={styles.percentageText}>{answer.name}</Text>
+
+                        </View>
                     </View>
-                    <Text style={styles.percentage}>{percent}%</Text>
-                </View>
+                ))}
             </View>
+
             <View style={styles.footer}>
                 <Text style={styles.footerText}> Ended Sep 27 | 2 outcomes </Text>
                 <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ fontSize: 12 }}><Icon name='account-multiple' />{traders}</Text>
-                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon name='poll' />{volume}</Text>
-                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon name='water-outline' />{liquidity}</Text>
+                    <Text style={{ fontSize: 12 }}><Icon name='account-multiple' />{marketStats.numVoters}</Text>
+                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon name='poll' />{marketStats.totalVolume}</Text>
+                    <Image source={{ uri: coverUrl }} />
                 </View>
             </View>
         </TouchableOpacity>
@@ -58,7 +78,7 @@ export default CardItem;
 
 const styles = StyleSheet.create({
     card: {
-        width: 330,
+        width: '97%',
         padding: 10,
         margin: 10,
         marginLeft: 1,
@@ -73,15 +93,15 @@ const styles = StyleSheet.create({
     },
 
     cardHeader: {
-        flexDirection: 'row',        
-        alignItems: 'center',          
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 10,
-        width: '100%'                
+        width: '100%'
     },
     leftSection: {
-        flexDirection: 'row',          
-        alignItems: 'center'          
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     cardTitle: {
         fontSize: 16,

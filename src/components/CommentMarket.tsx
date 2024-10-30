@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image, Modal, Alert } from 'react-native';
 import api from '../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,7 +42,6 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [editCommentText, setEditCommentText] = useState('');
 
 
-  // const { Popover } = renderers;
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -269,6 +268,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
 
   const renderItem = ({ item }: { item: Comment }) => (
+
     <View style={styles.commentItem}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -328,7 +328,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         <Text style={styles.likeButton}>Reply</Text>
       </TouchableOpacity>
 
-      {/* TextInput cho reply */}
+      {/* TextInput  reply */}
       {replyVisible[item.id] && (
         <View style={{ marginLeft: 35, marginTop: 10 }}>
           <TextInput

@@ -8,15 +8,13 @@ import CardItem from '../components/CardItem';
 
 
 const HomeScreen = ({ navigation, route }: any) => {
-
   const marketData = require('../data.json');
 
   const filterByCategory = (category: string) => {
     return marketData.markets.filter((market: any) => market.category === category);
   };
 
-
-  const [selectedTab, setSelectedTab] = useState('Trending');  // Sử dụng useState thay cho this.state
+  const [selectedTab, setSelectedTab] = useState('All');  // Đặt mặc định là "All"
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'yellow' }}>
@@ -26,7 +24,7 @@ const HomeScreen = ({ navigation, route }: any) => {
           <View><Text style={styles.text_cate}>Category</Text></View>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
             <Category nameCategory='Sports' />
-            <Category nameCategory='Technology'/>
+            <Category nameCategory='Technology' />
             <Category nameCategory='Finance' />
             <Category nameCategory='News' />
             <Category nameCategory='Entertaiment' />
@@ -35,6 +33,13 @@ const HomeScreen = ({ navigation, route }: any) => {
         </View>
 
         <View style={styles.tabContainer}>
+          {/* Thay đổi thứ tự hiển thị các tab */}
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
+            onPress={() => setSelectedTab('All')}
+          >
+            <Text style={styles.tabText}>All</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'Trending' && styles.activeTab]}
             onPress={() => setSelectedTab('Trending')}
@@ -50,7 +55,13 @@ const HomeScreen = ({ navigation, route }: any) => {
         </View>
 
         <View style={styles.trendingSection}>
-          {selectedTab === 'Trending' ? (
+          {selectedTab === 'All' ? (
+            <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
+              {marketData.markets.map((market: any, index: number) => (
+                <CardItem key={market.id} nameMarket={market.name} outcome={market.outcome.result_1} percent={20} cate='Sports' traders={200} volume={304} liquidity={23} />
+              ))}
+            </ScrollView>
+          ) : selectedTab === 'Trending' ? (
             <>
               <CategoryCollection nameCategory='Sports' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
@@ -92,9 +103,10 @@ const HomeScreen = ({ navigation, route }: any) => {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView >
+    </SafeAreaView>
   );
-}
+};
+
 
 
 export default HomeScreen;

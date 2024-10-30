@@ -16,7 +16,6 @@ import DetailMarketScreen from './src/screens/DetailMarketScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-
 function MyTabs() {
   return (
     <Tab.Navigator
