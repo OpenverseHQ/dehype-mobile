@@ -1,8 +1,11 @@
 import { Text, StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import api from '../api';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
+type RootStackParamList = {
+    DetailMarket: { publicKey: string };
+};
 
 interface AnswerStats {
     name: string;
@@ -25,19 +28,23 @@ interface CardItems {
 }
 
 const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats }) => {
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [isLiked, setIsLiked] = useState(false);
 
     const toggleHeartColor = () => {
         setIsLiked(!isLiked);
     };
     return (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('DetailMarket', { publicKey })}>
             <View style={styles.cardHeader}>
                 <View style={styles.leftSection}>
-                    <Image source={{ uri: coverUrl }} />
+                    <Image
+                        source={{ uri: coverUrl }}
+                        style={{ width: 30, height: 30 }}
+                    />
                     <Text style={styles.cardTitle}>{title}</Text>
                 </View>
-                <TouchableOpacity onPress={toggleHeartColor}>
+                <TouchableOpacity onPress={toggleHeartColor} style={{ margin: 10 }}>
                     <Icon
                         name='heart'
                         color={isLiked ? 'red' : '#E5E7EB'}
@@ -48,26 +55,23 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats
 
             <View style={styles.progressBarContainer}>
                 {marketStats.answerStats.map((answer, index) => (
-                    
                     <View key={index} style={styles.progressBar}>
-
                         <View style={styles.progressBarWrapper}>
-                            <View style={[styles.progressFill, { answer.percentage }]}>
-                                <Text style={styles.outcomeText}>{index}</Text>
+                            <View style={[styles.progressFill]}>
+                                <Text style={styles.outcomeText}>{answer.name}</Text>
                             </View>
-                            <Text style={styles.percentageText}>{answer.name}</Text>
-
+                            <Text style={styles.percentageText}>{index}</Text>
                         </View>
                     </View>
                 ))}
             </View>
 
             <View style={styles.footer}>
-                <Text style={styles.footerText}> Ended Sep 27 | 2 outcomes </Text>
-                <View style={{ flexDirection: 'row' }}>
-                    <Text style={{ fontSize: 12 }}><Icon name='account-multiple' />{marketStats.numVoters}</Text>
-                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon name='poll' />{marketStats.totalVolume}</Text>
-                    <Image source={{ uri: coverUrl }} />
+                <Text style={styles.footerText}> Ended Sep 27 | {marketStats.answerStats.length} outcomes</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 12 }}><Icon size={14} name='account-multiple' /> {marketStats.numVoters}</Text>
+                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon size={14} name='poll' /> {marketStats.totalVolume}</Text>
+                    <Image source={{ uri: coverUrl }} style={{ width: 14, height: 14, marginLeft: 8 }} />
                 </View>
             </View>
         </TouchableOpacity>
@@ -97,19 +101,23 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 10,
-        width: '100%'
+        width: '100%',
+
     },
     leftSection: {
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 8,
     },
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginLeft: 10
+        marginLeft: 10,
+        flexWrap: 'wrap',
     },
     progressBarContainer: {
-        marginBottom: 5,
+
     },
     progressBar: {
         flexDirection: 'row',
@@ -119,15 +127,13 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingRight: 5
+        paddingRight: 5,
+        marginBottom: 5
     },
-    progressFill: {
-        backgroundColor: '#A7C7E7',
-        height: '100%',
-        borderTopLeftRadius: 10,
-        borderBottomLeftRadius: 10,
-        paddingLeft: 5,
-        justifyContent: 'center'
+    outcomeText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 5,
     },
     percentage: {
         marginLeft: 5,
@@ -152,5 +158,27 @@ const styles = StyleSheet.create({
     },
     heartIcon: {
         color: 'red',
+    },
+    progressBarWrapper: {
+        height: '100%',
+        backgroundColor: '#E5E7EB',
+        borderRadius: 5,
+        overflow: 'hidden',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: '#C9DBFF', // Màu sắc của thanh progress
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        paddingLeft: 5
+    },
+    percentageText: {
+        marginRight: 5,
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#000', // Màu chữ bên trong thanh progress
     },
 });

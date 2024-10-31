@@ -1,17 +1,42 @@
 import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import CategoryCollection from '../components/CategoryCollection';
 import Category from '../components/Category';
 import CardItemTrend from '../components/CardItemTrend';
 import CardItem from '../components/CardItem';
+import api from '../api';
 
 
 const HomeScreen = ({ navigation, route }: any) => {
-  const marketData = require('../data.json');
+  const [marketData, setMarketData] = useState<any[]>([]); // Kiểm tra kiểu dữ liệu
+
+
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const response = await api.get('/markets');
+        const markets = response.data;
+        console.log(markets)
+
+        const marketsWithStats = await Promise.all(
+          markets.map(async (market: any) => {
+            const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
+            return { ...market, marketStats: statsResponse.data }; 
+          })
+        );
+
+        setMarketData(marketsWithStats);
+      } catch (error) {
+        console.error('Error fetching market data:', error);
+      }
+    };
+
+    fetchMarketData();
+  }, []);
 
   const filterByCategory = (category: string) => {
-    return marketData.markets.filter((market: any) => market.category === category);
+    return marketData.filter((market: any) => market.category === category);
   };
 
   const [selectedTab, setSelectedTab] = useState('All');  // Đặt mặc định là "All"
@@ -57,8 +82,14 @@ const HomeScreen = ({ navigation, route }: any) => {
         <View style={styles.trendingSection}>
           {selectedTab === 'All' ? (
             <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
-              {marketData.markets.map((market: any, index: number) => (
-                <CardItem key={market.id} nameMarket={market.name} outcome={market.outcome.result_1} percent={20} cate='Sports' traders={200} volume={304} liquidity={23} />
+              {marketData.map((market: any) => (
+                <CardItem
+                  key={market.publicKey}
+                  publicKey={market.publicKey}
+                  title={market.title}
+                  coverUrl={market.coverUrl}
+                  marketStats={market.marketStats}
+                />
               ))}
             </ScrollView>
           ) : selectedTab === 'Trending' ? (
