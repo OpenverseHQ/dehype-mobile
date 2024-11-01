@@ -57,15 +57,13 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats
                 {marketStats.answerStats.map((answer, index) => (
                     <View key={index} style={styles.progressBar}>
                         <View style={styles.progressBarWrapper}>
-                            <View style={[styles.progressFill]}>
-                                <Text style={styles.outcomeText}>{answer.name}</Text>
-                            </View>
-                            <Text style={styles.percentageText}>{index}</Text>
+                            <View style={[styles.progressFill, { width: `${Math.min(parseFloat(answer.percentage), 100)}%` }]} />
+                            <Text style={styles.outcomeText}>{answer.name}</Text>
+                            <Text style={styles.percentageText}>{answer.percentage}%</Text>
                         </View>
                     </View>
                 ))}
             </View>
-
             <View style={styles.footer}>
                 <Text style={styles.footerText}> Ended Sep 27 | {marketStats.answerStats.length} outcomes</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -124,16 +122,18 @@ const styles = StyleSheet.create({
         height: 30,
         width: '100%',
         backgroundColor: '#E5E7EB',
-        borderRadius: 10,
+        borderRadius: 5,
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingRight: 5,
-        marginBottom: 5
+        marginBottom: 5,
+        overflow: 'hidden',
     },
     outcomeText: {
         fontSize: 14,
         fontWeight: 'bold',
-        marginBottom: 5,
+        color: '#000',
+        zIndex: 1,
+        marginLeft: 8
     },
     percentage: {
         marginLeft: 5,
@@ -166,19 +166,26 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        flex: 1,
+        position: 'relative',
+
+
     },
     progressFill: {
         height: '100%',
-        backgroundColor: '#C9DBFF', // Màu sắc của thanh progress
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        paddingLeft: 5
+        backgroundColor: '#C9DBFF',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+
     },
     percentageText: {
-        marginRight: 5,
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#000', // Màu chữ bên trong thanh progress
+        color: '#000',
+        zIndex: 1,
+        position: 'absolute',
+        right: 5,
     },
 });

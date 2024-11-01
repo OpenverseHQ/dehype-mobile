@@ -86,7 +86,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                     ? ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume)
                     : ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume).toFixed(2)
                   } {market.coin}
-                </Text>
+                 SOL</Text>
               </View>
             </TouchableOpacity>
           )}
