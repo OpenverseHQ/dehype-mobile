@@ -1,32 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput } from 'react-native';
 import CommentMarketScreen from '../components/CommentMarket';
+import api from '../api';
 
 
-interface CategoryScreenProps {
+interface DetailMarketScreenProps {
   route: {
     params: {
-      id: number;
+      publicKey: string;
     };
   };
 }
 
-const DetailMarketScreen: React.FC<CategoryScreenProps> = ({ route }) => {
+const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [amount, setAmount] = useState('0');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState<any>(null);
   const [selectedChoice, setSelectedChoice] = useState<'Yes' | 'No'>('Yes');
+  const { publicKey } = route.params;
+  const [market, setMarket] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const response = await api.get(`/markets/${publicKey}`);
+        const market = response.data;  // Giả sử response.data là một đối tượng đơn lẻ cho market
+
+        // Kiểm tra nếu dữ liệu market tồn tại và lấy thêm dữ liệu stats
+        if (market) {
+          const statsResponse = await api.get(`/markets/${publicKey}/stats`);
+          setMarket({ ...market, marketStats: statsResponse.data });
+        } else {
+          console.error('Market data is undefined');
+        }
+      } catch (error) {
+        console.error('Error fetching market data:', error);
+      }
+    };
+
+    fetchMarketData();
+  }, [publicKey]);
 
 
-  const idMarket = route.params.id;
-  const marketData = require('../data.json');
-  const filteredMarkets = marketData.markets.filter((market: any) => market.id === idMarket);
-  const market = filteredMarkets[0];
-
-  const outcomesArray = Object.entries(market.outcome).map(([option, percentage]) => ({
-    option,
-    percentage
+  if (!market) {
+    return <Text>Loading...</Text>;
+  }
+  const outcomesArray = market.marketStats.answerStats.map((stat: any) => ({
+    option: stat.name,
+    percentage: stat.percentage,
+    // totalValue: stat.totalVolume
   }));
+
 
   const handlePressRow = (item: any) => {
     setSelectedOutcome(item);
@@ -37,11 +61,11 @@ const DetailMarketScreen: React.FC<CategoryScreenProps> = ({ route }) => {
   return (
     <View style={styles.container}>
       {/* Tiêu đề và thông tin chung */}
-      <Text style={styles.title}>{market.name}</Text>
+      <Text style={styles.title}>{market.title}</Text>
       <Text style={styles.subtitle}>
         Started: {market.start_date}  |  Ends: {market.end_date}
       </Text>
-      <Text style={styles.totalVolume}>Total Volume: {market.volume} {market.coin}</Text>
+      <Text style={styles.totalVolume}>Total Volume: {market.marketStats.totalVolume} SOL</Text>
 
       <View style={styles.table}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
@@ -58,9 +82,9 @@ const DetailMarketScreen: React.FC<CategoryScreenProps> = ({ route }) => {
                 <Text style={styles.rowText}>{item.option}</Text>
                 <Text style={styles.rowText}>{item.percentage}</Text>
                 <Text style={styles.rowText}>
-                  {((parseFloat(item.percentage) / 100) * market.volume) % 1 === 0
-                    ? ((parseFloat(item.percentage) / 100) * market.volume)
-                    : ((parseFloat(item.percentage) / 100) * market.volume).toFixed(2)
+                  {((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume) % 1 === 0
+                    ? ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume)
+                    : ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume).toFixed(2)
                   } {market.coin}
                 </Text>
               </View>
@@ -76,7 +100,7 @@ const DetailMarketScreen: React.FC<CategoryScreenProps> = ({ route }) => {
           {market.description || 'No description available.'}
         </Text>
       </View>
-      <CommentMarketScreen idMarket={idMarket.toString()} />
+      <CommentMarketScreen idMarket={publicKey.toString()} />
 
       {/* Modal để hiển thị chi tiết khi nhấn vào một hàng */}
       {selectedOutcome && (

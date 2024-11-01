@@ -17,7 +17,6 @@ const HomeScreen = ({ navigation, route }: any) => {
       try {
         const response = await api.get('/markets');
         const markets = response.data;
-        console.log(markets)
 
         const marketsWithStats = await Promise.all(
           markets.map(async (market: any) => {
