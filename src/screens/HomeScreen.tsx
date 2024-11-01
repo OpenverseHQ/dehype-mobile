@@ -9,7 +9,7 @@ import api from '../api';
 
 
 const HomeScreen = ({ navigation, route }: any) => {
-  const [marketData, setMarketData] = useState<any[]>([]); // Kiểm tra kiểu dữ liệu
+  const [marketData, setMarketData] = useState<any[]>([]); 
 
 
   useEffect(() => {

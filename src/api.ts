@@ -3,8 +3,8 @@ import axios, { AxiosRequestConfig } from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
-  // baseURL: "https://dehype.api.dehype.fun/api/v1", // Thay bằng baseURL API của bạn
-  baseURL: "http://192.168.1.2:8080/api/v1", // Thay bằng baseURL API của bạn
+  baseURL: "https://dehype.api.openverse.tech/api/v1", // Thay bằng baseURL API của bạn
+  // baseURL: "http://192.168.1.2:8080/api/v1", // Thay bằng baseURL API của bạn
 });
 
 const getAccessToken = async () => {

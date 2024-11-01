@@ -64,6 +64,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats
                     </View>
                 ))}
             </View>
+            
             <View style={styles.footer}>
                 <Text style={styles.footerText}> Ended Sep 27 | {marketStats.answerStats.length} outcomes</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>

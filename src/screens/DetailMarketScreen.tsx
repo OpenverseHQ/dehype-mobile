@@ -24,9 +24,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     const fetchMarketData = async () => {
       try {
         const response = await api.get(`/markets/${publicKey}`);
-        const market = response.data;  // Giả sử response.data là một đối tượng đơn lẻ cho market
+        const market = response.data; 
 
-        // Kiểm tra nếu dữ liệu market tồn tại và lấy thêm dữ liệu stats
         if (market) {
           const statsResponse = await api.get(`/markets/${publicKey}/stats`);
           setMarket({ ...market, marketStats: statsResponse.data });
@@ -80,7 +79,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
             <TouchableOpacity onPress={() => handlePressRow(item)}>
               <View style={styles.row}>
                 <Text style={styles.rowText}>{item.option}</Text>
-                <Text style={styles.rowText}>{item.percentage}</Text>
+                <Text style={styles.rowText}>{item.percentage}%</Text>
                 <Text style={styles.rowText}>
                   {((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume) % 1 === 0
                     ? ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume)
