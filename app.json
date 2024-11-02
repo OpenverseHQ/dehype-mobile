@@ -1,7 +1,10 @@
 {
   "expo": {
+    "cli": {
+      "appVersionSource": "remote"
+    },
     "name": "solana-mobile-expo-template",
-    "slug": "solana-mobile-expo-template",
+    "slug": "dehype",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,7 +37,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "d9416420-3f40-4c4d-bf09-42a0d66b37e0"
+        "projectId": "298f548c-8cca-4710-910a-def237c1839c"
       }
     }
   }
