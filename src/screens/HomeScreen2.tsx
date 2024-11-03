@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import CategoryCollection from '../components/CategoryCollection';
@@ -9,8 +9,8 @@ import api from '../api/registerAccountApi';
 
 
 const HomeScreen2 = ({ navigation, route }: any) => {
-  const [marketData, setMarketData] = useState<any[]>([]); // Kiểm tra kiểu dữ liệu
 
+  const [marketData, setMarketData] = useState<any[]>([]); // Kiểm tra kiểu dữ liệu
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -21,7 +21,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
         const marketsWithStats = await Promise.all(
           markets.map(async (market: any) => {
             const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-            return { ...market, marketStats: statsResponse.data }; 
+            return { ...market, marketStats: statsResponse.data };
           })
         );
 
@@ -34,6 +34,8 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     fetchMarketData();
   }, []);
 
+
+
   const filterByCategory = (category: string) => {
     return marketData.filter((market: any) => market.category === category);
   };
@@ -41,7 +43,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const [selectedTab, setSelectedTab] = useState('All');  // Đặt mặc định là "All"
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'yellow' }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Header />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
@@ -177,12 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center'
-  },
-  sportCollection: {
-
-  },
-  headerSportCollection: {
-
   },
 
 });

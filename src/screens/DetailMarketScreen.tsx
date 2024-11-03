@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput,ActivityIndicator } from 'react-native';
 import CommentMarketScreen from '../components/CommentMarket';
 import api from '../api/registerAccountApi';
 
@@ -43,8 +43,14 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
 
 
   if (!market) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>hehehehe...</Text>
+      </View>
+    );
   }
+
   const outcomesArray = market.marketStats.answerStats.map((stat: any) => ({
     option: stat.name,
     percentage: stat.percentage,
@@ -373,6 +379,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#a9a9a9',
     fontSize: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
   },
 });
 
