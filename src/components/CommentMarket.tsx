@@ -46,7 +46,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     const fetchComments = async () => {
       try {
         const marketId = idMarket;
-        const response = await fetch(`http://192.168.1.11:8080/api/v1/markets/${marketId}/comments`, {
+        const response = await fetch(`https://dehype.api.openverse.tech/api/v1/markets/${marketId}/comments`, {
           headers: {
             'Accept': 'application/json',
           },
