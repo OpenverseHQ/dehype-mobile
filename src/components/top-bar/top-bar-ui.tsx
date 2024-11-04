@@ -7,6 +7,7 @@ import { useState } from "react";
 import * as Clipboard from "expo-clipboard";
 import { Linking } from "react-native";
 import { useCluster } from "../cluster/cluster-data-access";
+import useApi from "../../utils/useApi";
 
 export function TopBarWalletButton({
   selectedAccount,
@@ -91,6 +92,8 @@ export function TopBarWalletMenu() {
       />
       <Menu.Item
         onPress={async () => {
+          const {clearTokens} = useApi() ;
+          clearTokens() ;
           await disconnect();
           closeMenu();
         }}

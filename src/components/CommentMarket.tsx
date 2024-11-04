@@ -5,6 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
 
+// Hoang Custom
+import { useAuthorization } from '../utils/useAuthorization';
+//
+
 
 
 interface Reply {
@@ -46,7 +50,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     const fetchComments = async () => {
       try {
         const marketId = idMarket;
-        const response = await fetch(`http://192.168.1.11:8080/api/v1/markets/${marketId}/comments`, {
+        const response = await fetch(`https://dehype.api.openverse.tech/api/v1/markets/${marketId}/comments`, {
           headers: {
             'Accept': 'application/json',
           },
@@ -93,9 +97,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     fetchComments();
   }, [idMarket]);
 
-  const handleGetAccess = async () => {
+  const handleGetAccess = async (wallet) => {
     const requestBody = {
-      walletAddress: "123412",
+      walletAddress: wallet ,
       // walletAddress: "laskdflaskjva234jhas",
     };
     const response = await api.post("/auth/login", requestBody, {
@@ -108,7 +112,21 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     await AsyncStorage.setItem("refreshToken", refresh_token);
   };
 
+  const {selectedAccount} = useAuthorization() ;
   const handleAddComment = async () => {
+    if(selectedAccount==null) {
+      const showAlert = () => {
+        Alert.alert(
+          "",
+          "You need to log in to comment",
+          [{ text: "OK", onPress: () => console.log("OK Pressed") }]
+        );
+      };
+      showAlert() ;
+      return ;
+    }
+    await handleGetAccess(selectedAccount.publicKey) ; // Get access & refresh
+
     const newCommentObj = {
       content: newComment,
     };
@@ -278,7 +296,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           ) : (
             <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
           )}
-          <Text style={styles.username}> {item.username} </Text>
+          <Text style={styles.username}> {item.username.length<10 ? item.username:item.username.substring(0,10).concat("...")} </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text style={styles.timeAgo}>{item.createAt}</Text>
@@ -362,6 +380,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
                 <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
               )}
               <Text style={styles.username}> {reply.user.username} </Text>
+              <Text style={styles.username}> {reply.user.username.length<10 ? reply.user.username:reply.user.username.substring(0,10).concat("...")} </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={styles.timeAgo}>{reply.createAt}</Text>
