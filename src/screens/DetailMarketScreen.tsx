@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput,ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, ScrollView } from 'react-native';
 import CommentMarketScreen from '../components/CommentMarket';
 import api from '../api/registerAccountApi';
-
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Marquee from 'react-native-marquee';
+import BettingHistory from '../components/BettingHistory';
 
 interface DetailMarketScreenProps {
   route: {
@@ -19,17 +21,26 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [selectedChoice, setSelectedChoice] = useState<'Yes' | 'No'>('Yes');
   const { publicKey } = route.params;
   const [market, setMarket] = useState<any>(null);
+  const [selectedTab, setSelectedTab] = useState('Comment'); // Quản lý tab được chọn
+  const [isLiked, setIsLiked] = useState(false);
+
+  const toggleHeartColor = () => {
+    setIsLiked(!isLiked);
+  };
+
 
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
         const response = await api.get(`/markets/${publicKey}`);
-        const market = response.data;  // Giả sử response.data là một đối tượng đơn lẻ cho market
+        const marketData = response.data;
 
-        // Kiểm tra nếu dữ liệu market tồn tại và lấy thêm dữ liệu stats
-        if (market) {
+        if (marketData) {
+
           const statsResponse = await api.get(`/markets/${publicKey}/stats`);
-          setMarket({ ...market, marketStats: statsResponse.data });
+          const marketStats = statsResponse.data;
+          const totalVolume = marketStats.answerStats[0].totalVolume;
+          setMarket({ ...marketData, marketStats: { ...marketStats, totalVolume } });
         } else {
           console.error('Market data is undefined');
         }
@@ -54,7 +65,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const outcomesArray = market.marketStats.answerStats.map((stat: any) => ({
     option: stat.name,
     percentage: stat.percentage,
-    // totalValue: stat.totalVolume
+    totalValue: stat.totalTokens
   }));
 
 
@@ -65,135 +76,195 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
 
 
   return (
-    <View style={styles.container}>
-      {/* Tiêu đề và thông tin chung */}
-      <Text style={styles.title}>{market.title}</Text>
-      <Text style={styles.subtitle}>
-        Started: {market.start_date}  |  Ends: {market.end_date}
-      </Text>
-      <Text style={styles.totalVolume}>Total Volume: {market.marketStats.totalVolume} SOL</Text>
-
-      <View style={styles.table}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-          <Text style={styles.tableHeader}>Outcome</Text>
-          <Text style={styles.tableHeader}>Percentage(%)</Text>
-          <Text style={styles.tableHeader}>Total Value</Text>
-        </View>
-
-        <FlatList
-          data={outcomesArray}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => handlePressRow(item)}>
-              <View style={styles.row}>
-                <Text style={styles.rowText}>{item.option}</Text>
-                <Text style={styles.rowText}>{item.percentage}</Text>
-                <Text style={styles.rowText}>
-                  {((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume) % 1 === 0
-                    ? ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume)
-                    : ((parseFloat(item.percentage) / 100) * market.marketStats.totalVolume).toFixed(2)
-                  } {market.coin}
-                </Text>
+    <FlatList
+      style={styles.container}
+      data={outcomesArray}
+      keyExtractor={(item) => item.option}
+      showsVerticalScrollIndicator={false}
+      ListHeaderComponent={
+        <>
+          {/* Tiêu đề và thông tin chung */}
+          <View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Image style={{ width: 30, height: 30, marginRight: 10 }} source={{ uri: market.coverUrl }} />
+              <Marquee
+                style={styles.title}
+                marqueeOnStart={true}
+                loop
+              >
+                {market.title}
+              </Marquee>
+            </View>
+            <Text style={styles.subtitle}>
+              Started: {market.start_date} | Ends: {market.end_date} | Total Volume: {market.marketStats.totalVolume} SOL
+            </Text>
+          </View>
+          {/* Creater */}
+          <View style={{ flexDirection: 'row', marginBottom: 10, marginLeft: 5, alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 15 }}>
+              <Image style={{ width: 28, height: 28 }} source={require('../../assets/Male_User.png')} />
+              <View style={{ margin: 5 }}>
+                <Text style={{ fontSize: 10, color: '#666' }}>Creator</Text>
+                <Text style={{ fontSize: 12 }}>Thang Tran</Text>
               </View>
+            </View>
+            <Image style={{ width: 20, height: 20, marginRight: 10 }} source={{ uri: market.coverUrl }} />
+            <Icon name='check-circle-outline' size={20} color={'green'} />
+            <TouchableOpacity onPress={toggleHeartColor} style={{ margin: 10 }}>
+              <Icon
+                name='heart'
+                color={isLiked ? 'red' : '#666'}
+                size={20}
+              />
             </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item.option}
-        />
-      </View>
-      {/* Phần mô tả thị trường */}
-      <View style={styles.aboutContainer}>
-        <Text style={styles.aboutTitle}>About Market</Text>
-        <Text style={styles.aboutText}>
-          {market.description || 'No description available.'}
-        </Text>
-      </View>
-      <CommentMarketScreen idMarket={publicKey.toString()} />
+          </View>
 
-      {/* Modal để hiển thị chi tiết khi nhấn vào một hàng */}
-      {selectedOutcome && (
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <View style={styles.closeButton}></View>
-              </TouchableOpacity>
-              <View style={styles.modalHeader}>
-                <Image style={{ flex: 1, marginRight: 5 }} source={require('../../assets/Male_User.png')} />
-                <View style={{ flex: 6 }}>
-                  <Text style={styles.modalTitle}>{selectedOutcome.option}</Text>
-                  <Text style={{ fontSize: 10 }}>
-                    $ {((parseFloat(selectedOutcome.percentage) / 100) * market.volume).toFixed(2)} {market.coin}
-                  </Text>
-                </View>
-                <Text style={{ flex: 1, fontSize: 20 }}>{selectedOutcome.percentage}</Text>
-              </View>
-              <View style={styles.choiceContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.choiceButton,
-                    selectedChoice === 'Yes' ? styles.activeChoice : null
-                  ]}
-                  onPress={() => setSelectedChoice('Yes')}
-                >
-                  <Text style={styles.choiceText}>Yes</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.choiceButton,
-                    selectedChoice === 'No' ? styles.activeChoice : null
-                  ]}
-                  onPress={() => setSelectedChoice('No')}
-                >
-                  <Text style={styles.choiceText}>No</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.buyContainer}>
-                <View style={styles.buyHeader}>
-                  <Text style={styles.buyTitle}>You're Buying</Text>
-                  <Text style={styles.balance}>{amount} SOL</Text>
-                  <View style={styles.valueButtons}>
-                    <TouchableOpacity style={styles.valueButton}>
-                      <Text style={styles.valueButtonText}>HALF</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.valueButton}>
-                      <Text style={styles.valueButtonText}>MAX</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={styles.buyBody}>
-                  <View style={styles.currencySelector}>
-                    <Image source={require('../../assets/Male_User.png')} style={styles.currencyIcon} />
-                    <Text style={styles.currencyText}>SOL</Text>
-                  </View>
-                  <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
-                </View>
-
-                <TouchableOpacity style={styles.buyButton}>
-                  <Text style={styles.buyButtonText}>Buy</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.networkFee}>Network fee: 0 SOL</Text>
-              </View>
-
+          <View style={styles.table}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <Text style={styles.tableHeader}>Outcome</Text>
+              <Text style={styles.tableHeader}>Percentage(%)</Text>
+              <Text style={styles.tableHeader}>Total Value</Text>
             </View>
           </View>
-        </Modal>
+        </>
+      }
+      renderItem={({ item }) => (
+        <TouchableOpacity onPress={() => handlePressRow(item)}>
+          <View style={styles.row}>
+            <Text style={styles.rowText}>{item.option}</Text>
+            <Text style={styles.rowText}>{item.percentage}</Text>
+            <Text style={styles.rowText}> {(item.totalValue / 1e9).toFixed(2)} </Text>
+          </View>
+        </TouchableOpacity>
       )}
-    </View>
+      ListFooterComponent={
+        <>
+          {/* Phần mô tả thị trường */}
+          <View style={styles.aboutContainer}>
+            <Text style={styles.aboutTitle}>About Market</Text>
+            <Text style={styles.aboutText}>
+              {market.description || 'No description available.'}
+            </Text>
+          </View>
+
+          {/* Các tab bình luận và lịch sử cược */}
+          <View style={{ flexDirection: 'row' }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                paddingVertical: 8,
+                borderBottomWidth: selectedTab === 'Comment' ? 2 : 0,
+                borderBottomColor: 'blue',
+              }}
+              onPress={() => setSelectedTab('Comment')}
+            >
+              <Text style={{ color: selectedTab === 'Comment' ? 'blue' : 'black' }}>Comments</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                paddingVertical: 8,
+                borderBottomWidth: selectedTab === 'Betting history' ? 2 : 0,
+                borderBottomColor: 'blue',
+              }}
+              onPress={() => setSelectedTab('Betting history')}
+            >
+              <Text style={{ color: selectedTab === 'Betting history' ? 'blue' : 'black' }}>Activity</Text>
+            </TouchableOpacity>
+          </View>
+
+          {selectedTab === 'Comment' ? (
+            <CommentMarketScreen idMarket={publicKey.toString()} />
+          ) : (
+            <BettingHistory idMarket={publicKey.toString()} />
+          )}
+
+          {/* Modal hiển thị chi tiết khi nhấn vào một hàng */}
+          {selectedOutcome && (
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <TouchableOpacity onPress={() => setModalVisible(false)}>
+                    <View style={styles.closeButton}></View>
+                  </TouchableOpacity>
+                  <View style={styles.modalHeader}>
+                    <Image style={{ flex: 1, marginRight: 5 }} source={require('../../assets/Male_User.png')} />
+                    <View style={{ flex: 6 }}>
+                      <Text style={styles.modalTitle}>{selectedOutcome.option}</Text>
+                      <Text style={{ fontSize: 10 }}>
+                        $ {((parseFloat(selectedOutcome.percentage) / 100) * market.volume).toFixed(2)} {market.coin}
+                      </Text>
+                    </View>
+                    <Text style={{ flex: 1, fontSize: 20 }}>{selectedOutcome.percentage}</Text>
+                  </View>
+                  <View style={styles.choiceContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.choiceButton,
+                        selectedChoice === 'Yes' ? styles.activeChoice : null
+                      ]}
+                      onPress={() => setSelectedChoice('Yes')}
+                    >
+                      <Text style={styles.choiceText}>Yes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.choiceButton,
+                        selectedChoice === 'No' ? styles.activeChoice : null
+                      ]}
+                      onPress={() => setSelectedChoice('No')}
+                    >
+                      <Text style={styles.choiceText}>No</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.buyContainer}>
+                    <View style={styles.buyHeader}>
+                      <Text style={styles.buyTitle}>You're Buying</Text>
+                      <Text style={styles.balance}>{amount} SOL</Text>
+                      <View style={styles.valueButtons}>
+                        <TouchableOpacity style={styles.valueButton}>
+                          <Text style={styles.valueButtonText}>HALF</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.valueButton}>
+                          <Text style={styles.valueButtonText}>MAX</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={styles.buyBody}>
+                      <View style={styles.currencySelector}>
+                        <Image source={require('../../assets/Male_User.png')} style={styles.currencyIcon} />
+                        <Text style={styles.currencyText}>SOL</Text>
+                      </View>
+                      <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
+                    </View>
+                    <TouchableOpacity style={styles.buyButton}>
+                      <Text style={styles.buyButtonText}>Buy</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.networkFee}>Network fee: 0 SOL</Text>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          )}
+        </>
+      }
+    />
   );
+
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f4f4f4',
-    padding: 20,
+    padding: 10,
   },
   title: {
     fontSize: 22,
@@ -205,27 +276,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    marginVertical: 10,
+    marginLeft: 0,
   },
-  totalVolume: {
-    fontSize: 16,
-    color: '#000',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+
   table: {
     backgroundColor: '#fff',
-    borderRadius: 10,
     padding: 10,
-    marginBottom: 20,
-    borderWidth: 1,
+    borderBottomWidth: 1,
     borderColor: '#e6e6e6',
+    borderTopRightRadius: 10,
+    borderTopLeftRadius: 10,
   },
   tableHeader: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
@@ -233,7 +299,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#e6e6e6',
-    paddingHorizontal: 10,
+    backgroundColor: '#fff',
   },
   rowText: {
     fontSize: 14,

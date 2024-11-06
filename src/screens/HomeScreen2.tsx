@@ -45,7 +45,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Header />
-      <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View><Text style={styles.text_cate}>Category</Text></View>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
@@ -89,6 +89,8 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                   publicKey={market.publicKey}
                   title={market.title}
                   coverUrl={market.coverUrl}
+                  participants={market.participants}
+                  totalVolume={market.totalVolume}
                   marketStats={market.marketStats}
                 />
               ))}
