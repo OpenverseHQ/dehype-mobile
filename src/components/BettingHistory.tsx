@@ -39,7 +39,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
         fetchVoters();
     }, [idMarket]);
 
-    if (loading) return <ActivityIndicator size="large" color="#0000ff" />;
+    if (loading) return <ActivityIndicator size="large" color="#0000ff" style={{margin:20}}/>;
     if (error) return <Text>{error}</Text>;
 
     return (

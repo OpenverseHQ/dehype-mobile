@@ -58,7 +58,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>hehehehe...</Text>
+        <Text style={styles.loadingText}>Đợi tí...</Text>
       </View>
     );
   }
@@ -179,7 +179,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
           </View>
 
           {selectedTab === 'Comment' ? (
-            <CommentMarketScreen idMarket={publicKey.toString()} />
+            <CommentMarketScreen idMarket={publicKey.toString()} /> 
           ) : (
             <BettingHistory idMarket={publicKey.toString()} />
           )}

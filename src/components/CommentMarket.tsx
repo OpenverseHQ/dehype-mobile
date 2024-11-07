@@ -49,7 +49,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
 
   const fetchComments = async (page) => {
-    setLoading(true); // Bắt đầu loading khi bắt đầu fetch
+    setLoading(true);
     try {
       const marketId = idMarket;
       const response = await fetch(`https://dehype.api.openverse.tech/api/v1/markets/${marketId}/comments?current=${page}`, {
@@ -87,9 +87,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
           // Kiểm tra nếu còn trang để tải thêm
           if (page <= data.meta.pages) {
-            setHasMore(true);  // Còn dữ liệu để tải
+            setHasMore(true);
           } else {
-            setHasMore(false); // Hết dữ liệu
+            setHasMore(false);
           }
         } else {
           console.error('No comments found or comments are not in an array.');
@@ -103,7 +103,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       console.error('Error fetching comments:', error);
       setHasMore(false);
     }
-    setLoading(false); // Dừng loading sau khi fetch xong
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -467,15 +467,18 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         <Text>Holders</Text>
       </View>
       <View>
-        <FlatList
-          data={comments}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          onEndReached={loadMoreComments}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={loading ? <ActivityIndicator /> : null}
-
-        />
+        {comments.length === 0 ? (
+          <Text style={{color:'#ff9033'}}>No comment available</Text> 
+        ) : (
+          <FlatList
+            data={comments}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id.toString()}
+            onEndReached={loadMoreComments}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={loading ? <ActivityIndicator /> : null}
+          />
+        )}
       </View>
 
     </MenuProvider>
