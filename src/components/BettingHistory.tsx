@@ -17,7 +17,6 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
             try {
                 const response = await api.get(`/markets/${idMarket}/voters`);
                 const voters = response.data;
-                console.log(voters[0].account.voter)
 
                 const infoVoter = await Promise.all(
                     voters.map(async (voter) => {
@@ -26,8 +25,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                     })
                 );
                 setVoterData(infoVoter)
-                console.log(infoVoter)
-
+                setLoading(false);
             } catch (error: any) {
                 if (error.response) {
                     console.error("Error fetching voters:", error.response.status, error.response.data);
@@ -47,18 +45,54 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
     return (
         <FlatList
             data={voterData}
-            keyExtractor={(item) => item.voter.publicKey}
-            renderItem={({ item }) => (
-                <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' }}>
-                    <Text style={{ fontWeight: 'bold' }}>{item.voter.account.answerKey}</Text>
-                    <Text>Vote: {item.voter.account.voter}</Text>
-                    <Text>Username: {item.info.username}</Text>
-                    <Image source={{ uri: item.info.avatarUrl }} style={{ width: 50, height: 50 }} />
-                </View>
-            )}
+            keyExtractor={(item) => item.publicKey}
+            renderItem={({ item }) => {
+                const { username } = item.info;
+                const truncatedUsername = username.length > 10
+                    ? `${username.substring(0, 10)}...${username.substring(username.length - 4)}`
+                    : username;
+                return (
+                    <View style={styles.container}>
+                        <Image source={{ uri: item.info.avatarUrl }} style={styles.image} />
+                        <View>
+                            <Text style={styles.username}>{truncatedUsername}</Text>
+                            <Text style={styles.bought}>Bought
+                                <Text style={{ color: '#26ad5f' }}> {item.account.tokens} SOL <Text style={{color:'#666'}}>for</Text> {item.account.answerKey}</Text> at {item.account.createTime}
+                            </Text>
+                        </View>
+                    </View>
+                );
+            }}
         />
+
 
     );
 };
 
 export default BettingHistory;
+
+const styles = StyleSheet.create({
+    container: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+        backgroundColor: 'white',
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 5
+    },
+    image: {
+        width: 35,
+        height: 35,
+        marginRight: 10
+    },
+    username: {
+        fontWeight: 'bold',
+        fontSize: 12
+    },
+    bought: {
+        color: '#666',
+        fontSize: 14
+    }
+
+});
