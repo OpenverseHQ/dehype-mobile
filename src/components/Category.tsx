@@ -22,31 +22,31 @@ const Category: React.FC<MyProps> = ({ nameCategory }) => {
 
   return (
     <TouchableOpacity style={styles.categoryItem} onPress={handlePress}>
-      <Image style={styles.image} source={require('../../assets/sport.png')} />
-      <Text style={styles.text}>{nameCategory}</Text>
+            <Image source={require('../../assets/sport.png')} style={styles.image} />
+            <Text style={styles.text}>{nameCategory}</Text>
     </TouchableOpacity>
   );
 };
-  
+
 
 export default Category;
 
 const styles = StyleSheet.create({
 
-    categoryItem: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative'
-    },
-    image: {
+  categoryItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  image: {
 
-    },
-    text: {
-        position: 'absolute',
-        bottom: 14,
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: 'white',
-        paddingHorizontal: 10,
-    },
+  },
+  text: {
+    position: 'absolute',
+    bottom: 14,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    paddingHorizontal: 10,
+  },
 })

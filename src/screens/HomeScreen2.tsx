@@ -1,5 +1,5 @@
 import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import CategoryCollection from '../components/CategoryCollection';
 import Category from '../components/Category';
@@ -10,7 +10,7 @@ import api from '../api/registerAccountApi';
 
 const HomeScreen2 = ({ navigation, route }: any) => {
 
-  const [marketData, setMarketData] = useState<any[]>([]); // Kiểm tra kiểu dữ liệu
+  const [marketData, setMarketData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -35,7 +35,6 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   }, []);
 
 
-
   const filterByCategory = (category: string) => {
     return marketData.filter((market: any) => market.category === category);
   };
@@ -54,7 +53,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
             <Category nameCategory='Finance' />
             <Category nameCategory='News' />
             <Category nameCategory='Entertaiment' />
-            <Category nameCategory='Politics' />
+            <Category nameCategory='Science' />
           </ScrollView>
         </View>
 

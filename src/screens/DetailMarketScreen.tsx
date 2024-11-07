@@ -5,6 +5,7 @@ import api from '../api/registerAccountApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Marquee from 'react-native-marquee';
 import BettingHistory from '../components/BettingHistory';
+import { htmlToText } from 'html-to-text';
 
 interface DetailMarketScreenProps {
   route: {
@@ -139,11 +140,13 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       )}
       ListFooterComponent={
         <>
+          {/* Phần biểu đồ */}
+
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
             <Text style={styles.aboutTitle}>About Market</Text>
             <Text style={styles.aboutText}>
-              {market.description || 'No description available.'}
+              {htmlToText(market.description || 'No description available.')}
             </Text>
           </View>
 
