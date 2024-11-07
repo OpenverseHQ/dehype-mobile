@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image, Modal, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image, ActivityIndicator, Alert } from 'react-native';
 import api from '../api/registerAccountApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -8,8 +8,6 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-
 // Hoang Custom
 import { useAuthorization } from '../utils/useAuthorization';
 //
-
-
 
 interface Reply {
   id: string;
@@ -42,60 +40,81 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
   const [replyVisible, setReplyVisible] = useState<{ [key: string]: boolean }>({});
   const [editCommentId, setEditCommentId] = useState<string | null>(null);
-  const [editReplyId, setEditReplyId] = useState<string | null>(null); // New state for editing reply comments
+  const [editReplyId, setEditReplyId] = useState<string | null>(null);
   const [editCommentText, setEditCommentText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
 
-  useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const marketId = idMarket;
-        const response = await fetch(`https://dehype.api.openverse.tech/api/v1/markets/${marketId}/comments`, {
-          headers: {
-            'Accept': 'application/json',
-          },
-        });
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const data = await response.json();
+  const fetchComments = async (page) => {
+    setLoading(true); // Bắt đầu loading khi bắt đầu fetch
+    try {
+      const marketId = idMarket;
+      const response = await fetch(`https://dehype.api.openverse.tech/api/v1/markets/${marketId}/comments?current=${page}`, {
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
 
-          // Kiểm tra nếu comments tồn tại
-          if (data.comments && Array.isArray(data.comments)) {
-            const formattedComments = data.comments.map((comment: any) => ({
-              id: comment.id,
-              username: comment.user.username,
-              avatarUrl: comment.user.avatarUrl,
-              text: comment.comment,
-              createAt: new Date(comment.createdAt).toLocaleString(),
-              updateAt: new Date(comment.updatedAt).toLocaleString(),
-              // Đảm bảo replies là một mảng
-              replies: Array.isArray(comment.replies) ? comment.replies.map((reply: any) => ({
-                id: reply.id,
-                comment: reply.comment,
-                createAt: new Date(reply.createdAt).toLocaleString(),
-                updateAt: new Date(reply.updatedAt).toLocaleString(),
-                user: {
-                  username: reply.user.username,
-                  avatarUrl: reply.user.avatarUrl
-                }
-              })) : []
-            }));
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
 
-            setComments(formattedComments);
+        // Kiểm tra nếu comments tồn tại
+        if (data.comments && Array.isArray(data.comments)) {
+          const formattedComments = data.comments.map((comment: any) => ({
+            id: comment.id,
+            username: comment.user.username,
+            avatarUrl: comment.user.avatarUrl,
+            text: comment.comment,
+            createAt: new Date(comment.createdAt).toLocaleString(),
+            updateAt: new Date(comment.updatedAt).toLocaleString(),
+            replies: Array.isArray(comment.replies) ? comment.replies.map((reply: any) => ({
+              id: reply.id,
+              comment: reply.comment,
+              createAt: new Date(reply.createdAt).toLocaleString(),
+              updateAt: new Date(reply.updatedAt).toLocaleString(),
+              user: {
+                username: reply.user.username,
+                avatarUrl: reply.user.avatarUrl
+              }
+            })) : []
+          }));
+
+          setComments(prevComments => [...prevComments, ...formattedComments]);
+
+          // Kiểm tra nếu còn trang để tải thêm
+          if (page <= data.meta.pages) {
+            setHasMore(true);  // Còn dữ liệu để tải
           } else {
-            console.error('No comments found or comments are not in an array.');
+            setHasMore(false); // Hết dữ liệu
           }
         } else {
-          console.error('Expected JSON, but got something else:', contentType);
+          console.error('No comments found or comments are not in an array.');
+          setHasMore(false);
         }
-      } catch (error) {
-        console.error('Error fetching comments:', error);
+      } else {
+        console.error('Expected JSON, but got something else:', contentType);
+        setHasMore(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      setHasMore(false);
+    }
+    setLoading(false); // Dừng loading sau khi fetch xong
+  };
 
-    fetchComments();
-  }, [idMarket]);
+  useEffect(() => {
+    fetchComments(currentPage);
+  }, [idMarket, currentPage]);
+
+  const loadMoreComments = () => {
+    if (hasMore && !loading) {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+  };
 
   const handleGetAccess = async (wallet) => {
     const requestBody = {
@@ -379,7 +398,6 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               ) : (
                 <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
               )}
-              <Text style={styles.username}> {reply.user.username} </Text>
               <Text style={styles.username}> {reply.user.username.length < 10 ? reply.user.username : reply.user.username.substring(0, 10).concat("...")} </Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -453,6 +471,10 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           data={comments}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
+          onEndReached={loadMoreComments}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={loading ? <ActivityIndicator /> : null}
+
         />
       </View>
 
