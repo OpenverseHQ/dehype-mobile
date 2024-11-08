@@ -11,6 +11,20 @@ import api from '../api/registerAccountApi';
 const HomeScreen2 = ({ navigation, route }: any) => {
 
   const [marketData, setMarketData] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/category');
+      console.log(response.data)
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách category:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -39,7 +53,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     return marketData.filter((market: any) => market.category === category);
   };
 
-  const [selectedTab, setSelectedTab] = useState('All');  // Đặt mặc định là "All"
+  const [selectedTab, setSelectedTab] = useState('All'); 
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -48,12 +62,9 @@ const HomeScreen2 = ({ navigation, route }: any) => {
         <View style={styles.container}>
           <View><Text style={styles.text_cate}>Category</Text></View>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-            <Category nameCategory='Sports' />
-            <Category nameCategory='Technology' />
-            <Category nameCategory='Finance' />
-            <Category nameCategory='News' />
-            <Category nameCategory='Entertaiment' />
-            <Category nameCategory='Science' />
+            {categories.map((category) => (
+              <Category key={category.id} id={category.id} nameCategory={category.name} coverUrl={category.coverUrl} />
+            ))}
           </ScrollView>
         </View>
 
@@ -148,6 +159,7 @@ export default HomeScreen2;
 const styles = StyleSheet.create({
   container: {
     padding: 10,
+    paddingBottom:0,
     backgroundColor: '#fff',
   },
   text_cate: {

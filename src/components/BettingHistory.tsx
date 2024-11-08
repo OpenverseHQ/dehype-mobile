@@ -74,12 +74,14 @@ export default BettingHistory;
 const styles = StyleSheet.create({
     container: {
         padding: 10,
-        borderBottomWidth: 1,
+        borderBottomWidth: 0.5,
         borderBottomColor: '#ccc',
         backgroundColor: 'white',
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 5
+        borderRadius: 5,
+        paddingBottom:20,
+        paddingTop:20,
     },
     image: {
         width: 35,

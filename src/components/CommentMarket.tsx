@@ -467,18 +467,14 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         <Text>Holders</Text>
       </View>
       <View>
-        {comments.length === 0 ? (
-          <Text style={{color:'#ff9033'}}>No comment available</Text> 
-        ) : (
-          <FlatList
-            data={comments}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id.toString()}
-            onEndReached={loadMoreComments}
-            onEndReachedThreshold={0.5}
-            ListFooterComponent={loading ? <ActivityIndicator /> : null}
-          />
-        )}
+        <FlatList
+          data={comments}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          onEndReached={loadMoreComments}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={loading ? <ActivityIndicator /> : null}
+        />
       </View>
 
     </MenuProvider>
