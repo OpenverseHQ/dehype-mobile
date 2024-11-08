@@ -17,6 +17,7 @@ interface Reply {
   user: {
     username: string;
     avatarUrl: string;
+    walletAddress: string
   };
 }
 interface Comment {
@@ -26,6 +27,7 @@ interface Comment {
   text: string;
   createAt: string;
   updateAt: string;
+  walletAddress: string;
   replies: Reply[];
 }
 
@@ -45,6 +47,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const [enableMenu, setenableMenu] = useState<boolean>(false);
+
+
 
 
 
@@ -69,6 +74,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
             username: comment.user.username,
             avatarUrl: comment.user.avatarUrl,
             text: comment.comment,
+            walletAddress: comment.user.walletAddress,
             createAt: new Date(comment.createdAt).toLocaleString(),
             updateAt: new Date(comment.updatedAt).toLocaleString(),
             replies: Array.isArray(comment.replies) ? comment.replies.map((reply: any) => ({
@@ -77,6 +83,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               createAt: new Date(reply.createdAt).toLocaleString(),
               updateAt: new Date(reply.updatedAt).toLocaleString(),
               user: {
+                walletAddress: reply.user.walletAddress,
                 username: reply.user.username,
                 avatarUrl: reply.user.avatarUrl
               }
@@ -157,6 +164,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         const newCommentFormatted: Comment = {
           id: response.data.id,
           text: response.data.comment,
+          walletAddress: response.data.user.walletAddress,
           username: response.data.user?.walletAddress || 'Anonymous',
           avatarUrl: 'https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png',
           createAt: new Date(response.data.createdAt).toLocaleString(),
@@ -226,12 +234,14 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
                 };
               }
               return { ...comment, text: updatedText };
+
             }
+            console.log(comment)
             return comment;
           })
         );
         setEditCommentId(null);
-        setEditReplyId(null); // Clear editReplyId after updating
+        setEditReplyId(null);
       } else {
         console.error('Error updating comment:', response.status, response.data);
       }
@@ -277,7 +287,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           createAt: new Date(response.data.createdAt).toLocaleString(),
           updateAt: new Date(response.data.updatedAt).toLocaleString(),
           user: {
-            username: response.data.user?.walletAddress || 'Anonymous',
+            walletAddress: response.data.user?.walletAddress,
+            username: response.data.user.walletAddress || 'Anonymous',
             avatarUrl: response.data.user?.avatarUrl || 'https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png',
           },
         };
@@ -304,116 +315,34 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
 
 
-  const renderItem = ({ item }: { item: Comment }) => (
-
-    <View style={styles.commentItem}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {/* Kiểm tra avatarUrl trước khi render Image */}
-          {item.avatarUrl ? (
-            <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
-          )}
-          <Text style={styles.username}> {item.username.length < 10 ? item.username : item.username.substring(0, 10).concat("...")} </Text>
-        </View>
+  const renderItem = ({ item }: { item: Comment }) => {
+    return (
+      <View style={styles.commentItem}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={styles.timeAgo}>{item.createAt}</Text>
-          <Menu>
-            <MenuTrigger>
-              <Icon size={20} name="dots-horizontal" />
-            </MenuTrigger>
-            <MenuOptions>
-              <MenuOption onSelect={() => handleEditPress(item.id, item.text)}>
-                <View style={styles.option}>
-                  <Icon name="update" size={20} />
-                  <Text style={styles.menuText}>Update</Text>
-                </View>
-              </MenuOption>
-              <MenuOption onSelect={() => handleDeleteComment(item.id)}>
-                <View style={styles.option}>
-                  <Icon name="delete" size={20} />
-                  <Text style={styles.menuText}>Delete</Text>
-                </View>
-              </MenuOption>
-            </MenuOptions>
-          </Menu>
-        </View>
-
-      </View>
-      {/* Hiển thị TextInput khi comment ở chế độ chỉnh sửa */}
-      {editCommentId === item.id && !editReplyId ? (
-        <View style={{ marginLeft: 35 }}>
-          <TextInput
-            style={styles.input}
-            value={editCommentText}
-            onChangeText={setEditCommentText}
-          />
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={() => setEditCommentId(null)}>
-              <Text style={styles.cancelButton}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText)}>
-              <Text style={styles.postButtonTextRep}>Save</Text>
-            </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Kiểm tra avatarUrl trước khi render Image */}
+            {item.avatarUrl ? (
+              <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
+            )}
+            <Text style={styles.username}> {item.username.length < 10 ? item.username : item.username.substring(0, 10).concat("...")} </Text>
           </View>
-        </View>
-      ) : (
-        <Text style={{ marginLeft: 35 }}>{item.text}</Text>
-      )}
-      <TouchableOpacity onPress={() => handleReplyPress(item.id)}>
-        <Text style={styles.likeButton}>Reply</Text>
-      </TouchableOpacity>
-
-      {/* TextInput  reply */}
-      {replyVisible[item.id] && (
-        <View style={{ marginLeft: 35, marginTop: 10 }}>
-          <TextInput
-            style={styles.input}
-            value={replyText[item.id] ?? ''}
-            onChangeText={text => setReplyText(prev => ({ ...prev, [item.id]: text }))}
-            placeholder={`@${item.username}`}
-          />
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <TouchableOpacity onPress={() => handleCancelReply(item.id)}>
-              <Text style={styles.cancelButton}>Cancel</Text>
-            </TouchableOpacity>
-            {/* <TouchableOpacity onPress={() => handlePostReply(item.id)}> */}
-            <TouchableOpacity onPress={() => handlePostReply(item.id)}>
-              <Text style={styles.postButtonTextRep}>Post</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* Hiển thị replies */}
-      {item.replies.map((reply) => (
-        <View key={reply.id} style={{ marginLeft: 20, marginTop: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {/* Kiểm tra avatarUrl của reply trước khi render Image */}
-              {reply.user.avatarUrl ? (
-                <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
-              ) : (
-                <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
-              )}
-              <Text style={styles.username}> {reply.user.username.length < 10 ? reply.user.username : reply.user.username.substring(0, 10).concat("...")} </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={styles.timeAgo}>{reply.createAt}</Text>
+            <Text style={styles.timeAgo}>{item.createAt}</Text>
+            {item.walletAddress === selectedAccount.publicKey.toString() && (
               <Menu>
                 <MenuTrigger>
                   <Icon size={20} name="dots-horizontal" />
                 </MenuTrigger>
                 <MenuOptions>
-                  <MenuOption onSelect={() => handleEditPress(item.id, reply.comment, reply.id)}>
+                  <MenuOption onSelect={() => handleEditPress(item.id, item.text)}>
                     <View style={styles.option}>
                       <Icon name="update" size={20} />
                       <Text style={styles.menuText}>Update</Text>
                     </View>
                   </MenuOption>
-                  <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
+                  <MenuOption onSelect={() => handleDeleteComment(item.id)}>
                     <View style={styles.option}>
                       <Icon name="delete" size={20} />
                       <Text style={styles.menuText}>Delete</Text>
@@ -421,32 +350,119 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
                   </MenuOption>
                 </MenuOptions>
               </Menu>
+            )}
+          </View>
+
+        </View>
+        {/* Hiển thị TextInput khi comment ở chế độ chỉnh sửa */}
+        {editCommentId === item.id && !editReplyId ? (
+          <View style={{ marginLeft: 35 }}>
+            <TextInput
+              style={styles.input}
+              value={editCommentText}
+              onChangeText={setEditCommentText}
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity onPress={() => setEditCommentId(null)}>
+                <Text style={styles.cancelButton}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText)}>
+                <Text style={styles.postButtonTextRep}>Save</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          {/* Edit TextInput for reply */}
-          {editCommentId === item.id && editReplyId === reply.id ? (
-            <View style={{ marginLeft: 35 }}>
-              <TextInput
-                style={styles.input}
-                value={editCommentText}
-                onChangeText={setEditCommentText}
-              />
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <TouchableOpacity onPress={() => setEditCommentId(null)}>
-                  <Text style={styles.cancelButton}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText, reply.id)}>
-                  <Text style={styles.postButtonTextRep}>Save</Text>
-                </TouchableOpacity>
+        ) : (
+          <Text style={{ marginLeft: 35 }}>{item.text}</Text>
+        )}
+        <TouchableOpacity onPress={() => handleReplyPress(item.id)}>
+          <Text style={styles.likeButton}>Reply</Text>
+        </TouchableOpacity>
+
+        {/* TextInput  reply */}
+        {replyVisible[item.id] && (
+          <View style={{ marginLeft: 35, marginTop: 10 }}>
+            <TextInput
+              style={styles.input}
+              value={replyText[item.id] ?? ''}
+              onChangeText={text => setReplyText(prev => ({ ...prev, [item.id]: text }))}
+              placeholder={`@${item.username}`}
+            />
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity onPress={() => handleCancelReply(item.id)}>
+                <Text style={styles.cancelButton}>Cancel</Text>
+              </TouchableOpacity>
+              {/* <TouchableOpacity onPress={() => handlePostReply(item.id)}> */}
+              <TouchableOpacity onPress={() => handlePostReply(item.id)}>
+                <Text style={styles.postButtonTextRep}>Post</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Hiển thị replies */}
+        {item.replies.map((reply) => (
+          <View key={reply.id} style={{ marginLeft: 20, marginTop: 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {/* Kiểm tra avatarUrl của reply trước khi render Image */}
+                {reply.user.avatarUrl ? (
+                  <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
+                ) : (
+                  <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
+                )}
+                <Text style={styles.username}> {reply.user.username.length < 10 ? reply.user.username : reply.user.username.substring(0, 10).concat("...")} </Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={styles.timeAgo}>{reply.createAt}</Text>
+                {reply.user.walletAddress === selectedAccount.publicKey.toString() && (
+                  <Menu>
+                    <MenuTrigger>
+                      <Icon size={20} name="dots-horizontal" />
+                    </MenuTrigger>
+                    <MenuOptions>
+                      <MenuOption onSelect={() => handleEditPress(item.id, reply.comment, reply.id)}>
+                        <View style={styles.option}>
+                          <Icon name="update" size={20} />
+                          <Text style={styles.menuText}>Update</Text>
+                        </View>
+                      </MenuOption>
+                      <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
+                        <View style={styles.option}>
+                          <Icon name="delete" size={20} />
+                          <Text style={styles.menuText}>Delete</Text>
+                        </View>
+                      </MenuOption>
+                    </MenuOptions>
+                  </Menu>
+                )}
               </View>
             </View>
-          ) : (
-            <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
-          )}
-        </View>
-      ))}
-    </View>
-  );
+            {/* Edit TextInput for reply */}
+            {editCommentId === item.id && editReplyId === reply.id ? (
+              <View style={{ marginLeft: 35 }}>
+                <TextInput
+                  style={styles.input}
+                  value={editCommentText}
+                  onChangeText={setEditCommentText}
+                />
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <TouchableOpacity onPress={() => setEditCommentId(null)}>
+                    <Text style={styles.cancelButton}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText, reply.id)}>
+                    <Text style={styles.postButtonTextRep}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  }
 
 
   return (

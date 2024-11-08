@@ -23,18 +23,11 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
     const fetchData = async () => {
         try {
             const response = await api.get(`/search/details?c=${id}`);
-            if (!response || !response.data) {
-                throw new Error("Không có dữ liệu từ API.");
-            }
             const markets = response.data;
-            console.log(markets)
 
             const marketsWithStats = await Promise.all(
                 markets.map(async (market: any) => {
                     const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-                    if (!statsResponse || !statsResponse.data) {
-                        throw new Error("Không có dữ liệu stats từ API.");
-                    }
                     return { ...market, marketStats: statsResponse.data };
                 })
             );
