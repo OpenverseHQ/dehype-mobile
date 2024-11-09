@@ -15,7 +15,6 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const fetchCategories = async () => {
     try {
       const response = await api.get('/category');
-      console.log(response.data)
       setCategories(response.data);
     } catch (error) {
       console.error('Lỗi khi lấy danh sách category:', error);

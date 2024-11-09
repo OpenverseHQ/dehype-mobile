@@ -6,16 +6,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Marquee from 'react-native-marquee';
 import BettingHistory from '../components/BettingHistory';
 import { htmlToText } from 'html-to-text';
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart
-} from 'react-native-chart-kit'
-import { Dimensions } from 'react-native'
-const screenWidth = Dimensions.get('window').width
 
 interface DetailMarketScreenProps {
   route: {
@@ -32,7 +22,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [selectedChoice, setSelectedChoice] = useState<'Yes' | 'No'>('Yes');
   const { publicKey } = route.params;
   const [market, setMarket] = useState<any>(null);
-  const [selectedTab, setSelectedTab] = useState('Comment'); // Quản lý tab được chọn
+  const [selectedTab, setSelectedTab] = useState('Comment'); 
   const [isLiked, setIsLiked] = useState(false);
 
   const toggleHeartColor = () => {
@@ -151,52 +141,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       ListFooterComponent={
         <>
           {/* Phần biểu đồ */}
-          {/* <View>
-            <Text>Bezier Line Chart</Text>
-            <LineChart
-              data={{
-                labels: ["January", "February", "March", "April", "May", "June"],
-                datasets: [
-                  {
-                    data: [
-                      Math.random() * 100,
-                      Math.random() * 100,
-                      Math.random() * 100,
-                      Math.random() * 100,
-                      Math.random() * 100,
-                      Math.random() * 100
-                    ]
-                  }
-                ]
-              }}
-              width={Dimensions.get("window").width} // from react-native
-              height={220}
-              yAxisLabel="$"
-              yAxisSuffix="k"
-              yAxisInterval={1} // optional, defaults to 1
-              chartConfig={{
-                backgroundColor: "#e26a00",
-                backgroundGradientFrom: "#fb8c00",
-                backgroundGradientTo: "#ffa726",
-                decimalPlaces: 2, // optional, defaults to 2dp
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                  borderRadius: 16
-                },
-                propsForDots: {
-                  r: "6",
-                  strokeWidth: "2",
-                  stroke: "#ffa726"
-                }
-              }}
-              bezier
-              style={{
-                marginVertical: 8,
-                borderRadius: 16
-              }}
-            />
-          </View> */}
+         {/* <Chart/> */}
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
             <Text style={styles.aboutTitle}>About Market</Text>

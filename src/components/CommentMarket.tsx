@@ -183,6 +183,10 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   };
 
   const handleDeleteComment = async (parentId: string, replyId?: string) => {
+    if (selectedAccount == null) {
+      Alert.alert('You need to log in to perform this function')
+    }
+
     try {
       const targetId = replyId || parentId;
       const response = await api.delete(`/markets/${idMarket}/comments/${targetId}`);
@@ -214,6 +218,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
 
   const handleUpdateComment = async (parentId: string, updatedText: string, replyId?: string) => {
+    if (selectedAccount == null) {
+      Alert.alert('You need to log in to perform this function')
+    }
     try {
       const targetId = replyId || parentId;
       const response = await api.patch(`/markets/${idMarket}/comments/${targetId}`, {
@@ -236,7 +243,6 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               return { ...comment, text: updatedText };
 
             }
-            console.log(comment)
             return comment;
           })
         );
@@ -330,7 +336,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={styles.timeAgo}>{item.createAt}</Text>
-            {item.walletAddress === selectedAccount.publicKey.toString() && (
+            {selectedAccount && selectedAccount.publicKey && item.walletAddress === selectedAccount.publicKey.toString() && (
               <Menu>
                 <MenuTrigger>
                   <Icon size={20} name="dots-horizontal" />
@@ -415,7 +421,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Text style={styles.timeAgo}>{reply.createAt}</Text>
-                {reply.user.walletAddress === selectedAccount.publicKey.toString() && (
+                {selectedAccount && selectedAccount.publicKey && reply.user.walletAddress === selectedAccount.publicKey.toString() && (
                   <Menu>
                     <MenuTrigger>
                       <Icon size={20} name="dots-horizontal" />

@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image, Alert } from 'react-native';
 import api from '../api/registerAccountApi';
 import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 interface CommentMarketScreenProps {
     idMarket: string;
@@ -12,11 +14,27 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const handleGetAccess = async (wallet) => {
+        const requestBody = {
+            walletAddress: wallet,
+            // walletAddress: "laskdflaskjva234jhas",
+        };
+        const response = await api.post("/auth/login", requestBody, {
+            isPublic: true, // Attach isPublic directly
+        } as any);
+
+        const { access_token, refresh_token } = response.data;
+        await AsyncStorage.setItem("accessToken", access_token);
+        await AsyncStorage.setItem("refreshToken", refresh_token);
+    };
+
     useEffect(() => {
         const fetchVoters = async () => {
+
             try {
                 const response = await api.get(`/markets/${idMarket}/voters`);
                 const voters = response.data;
+                await handleGetAccess(voters[0].account.voter);
 
                 const infoVoter = await Promise.all(
                     voters.map(async (voter) => {
@@ -39,7 +57,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
         fetchVoters();
     }, [idMarket]);
 
-    if (loading) return <ActivityIndicator size="large" color="#0000ff" style={{margin:20}}/>;
+    if (loading) return <ActivityIndicator size="large" color="#0000ff" style={{ margin: 20 }} />;
     if (error) return <Text>{error}</Text>;
 
     return (
@@ -57,7 +75,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                         <View>
                             <Text style={styles.username}>{truncatedUsername}</Text>
                             <Text style={styles.bought}>Bought
-                                <Text style={{ color: '#26ad5f' }}> {item.account.tokens} SOL <Text style={{color:'#666'}}>for</Text> {item.account.answerKey}</Text> at {item.account.createTime}
+                                <Text style={{ color: '#26ad5f' }}> {item.account.tokens} SOL <Text style={{ color: '#666' }}>for</Text> {item.account.answerKey}</Text> at {item.account.createTime}
                             </Text>
                         </View>
                     </View>
@@ -80,8 +98,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         borderRadius: 5,
-        paddingBottom:20,
-        paddingTop:20,
+        paddingBottom: 20,
+        paddingTop: 20,
     },
     image: {
         width: 35,
