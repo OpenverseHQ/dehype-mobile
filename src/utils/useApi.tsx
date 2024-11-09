@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 export default () => { 
+    //______________________ACCOUNT API______________________________
     // Ham API de find Nonce neu co
     const AccountExist = async (PublicKey) => {
         const requestBody = {
@@ -45,7 +46,7 @@ export default () => {
           isPublic: true, // Attach isPublic directly
         } as any);
     
-        console.log(response.data);
+        console.log("Access token is got : ",response.data);
         const { access_token, refresh_token } = response.data;
         await AsyncStorage.setItem("accessToken", access_token);
         await AsyncStorage.setItem("refreshToken", refresh_token);
@@ -62,5 +63,60 @@ export default () => {
         }
     };
 
-    return {AccountExist , AccountCreate , handleGetAccess , clearTokens } ;
+
+    const handleGetUserInfo = async (wallet) => {
+        const userId = wallet ;
+    
+        const response = await api.get(`/users/${userId}`);
+        // const response = await api.get(`/auth/admin`);
+        if (response!=null) AsyncStorage.setItem("userInfo", JSON.stringify(response.data)) ;
+        return response.data ;
+      };
+
+      const handleUpdateUserName = async (username) => {
+        const requestBody = {
+            username: username
+        };
+        const response = await api.patch("/users", requestBody);
+        console.log(response.data);
+        return response ;
+      };
+
+      //Upload avatar 
+      const UploadAvatar = async (imageUri: string) => {
+        try {
+          // Tạo formData chứa ảnh
+          const formData = new FormData();
+          formData.append('file', {
+            uri: imageUri,
+            name: 'photo.jpg',
+            type: 'image/jpeg',
+          });
+
+      
+            // Gửi formData chứa ảnh 
+            const uploadResponse = await api.post("/users/upload", formData,  {
+                headers: {
+                  'Content-Type': 'multipart/form-data', // Tùy chọn, FormData sẽ tự động thêm đúng header này
+                },
+              });
+      
+            console.log("Upload Response:", uploadResponse.data);
+            return uploadResponse.data;
+          }
+        catch (error) {
+          console.error("Upload error:", error);
+        }
+      };
+    //______________________________________________________________________________
+
+    //_________________________BLOG API_____________________________________________
+    const GetBlogs = async (pageSize=5,current=1)=> {
+        const response = await api.get(`/blogs?sort=-createdAt&pageSize=${pageSize}&current=${current}`);
+        return response ;
+    }
+
+
+    
+    return {AccountExist , AccountCreate , handleGetAccess , clearTokens , handleGetUserInfo , handleUpdateUserName , GetBlogs , UploadAvatar } ;
 }

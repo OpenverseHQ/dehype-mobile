@@ -25,6 +25,7 @@ import TestBlogsScreen from "../screens/TestBlogScreen";
 import UserSignedInScreen from "../screens/UserScreenSignedIn";
 import DetailMarketScreen from "../screens/DetailMarketScreen";
 import SolanaLoginScreen from "../screens/SolanaLoginScreen";
+import UploadImageScreen from "../screens/UploadImageScreen";
 
 const Stack = createNativeStackNavigator();
 const UserStack = () => (
@@ -38,6 +39,11 @@ const UserStack = () => (
       })}
     />
     <Stack.Screen name="SolonaScreen" component={HomeScreen} 
+      options={({ navigation }) => ({
+        headerShown: false
+      })}
+    />
+        <Stack.Screen name="UploadImageScreen" component={UploadImageScreen} 
       options={({ navigation }) => ({
         headerShown: false
       })}
@@ -112,7 +118,7 @@ function MyTabs() {
       <Tab2.Screen name="Notification" component={NotifiScreen} />
       <Tab2.Screen name="User" component={UserStack} />
       {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */} 
-      <Tab2.Screen name="Api" component ={SolanaLoginScreen} />
+      {/* <Tab2.Screen name="ImgUp" component ={UploadImageScreen} /> */}
     </Tab2.Navigator>
   );
 }

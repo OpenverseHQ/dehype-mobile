@@ -3,20 +3,33 @@ import { Account, useAuthorization } from "../../utils/useAuthorization";
 import { useMobileWallet } from "../../utils/useMobileWallet";
 import { useNavigation } from "@react-navigation/native";
 import { ellipsify } from "../../utils/ellipsify";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Clipboard from "expo-clipboard";
 import { Linking } from "react-native";
 import { useCluster } from "../cluster/cluster-data-access";
+
+// My custom import 
 import useApi from "../../utils/useApi";
+import {  Dialog, Portal, TextInput } from "react-native-paper";
+import { Alert , Text } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
+
 
 export function TopBarWalletButton({
   selectedAccount,
   openMenu,
+  username,
 }: {
   selectedAccount: Account | null;
   openMenu: () => void;
+  username:string|null;
 }) {
   const { connect } = useMobileWallet();
+
+
+
   return (
     <Button
       icon="wallet"
@@ -24,9 +37,16 @@ export function TopBarWalletButton({
       style={{ alignSelf: "center" }}
       onPress={selectedAccount ? openMenu : connect}
     >
-      {selectedAccount
-        ? ellipsify(selectedAccount.publicKey.toBase58())
-        : "Connect"}
+      <Text>
+        {selectedAccount
+          ? (
+            <>
+              {/* <Text>{ellipsify()}</Text> */}
+              <Text>{ellipsify(username)}</Text>
+            </>
+          )
+          : "Connect"}
+      </Text>
     </Button>
   );
 }
@@ -44,13 +64,22 @@ export function TopBarSettingsButton() {
   );
 }
 
-export function TopBarWalletMenu() {
+export function TopBarWalletMenu({username,setUsername}) {
   const { selectedAccount } = useAuthorization();
   const { getExplorerUrl } = useCluster();
   const [visible, setVisible] = useState(false);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
   const { disconnect } = useMobileWallet();
+
+  // My Custom 
+  const [newUsername , setNewUsername] = useState(username) ;
+  const [isDialogVisible, setDialogVisible] = useState(false);
+  const {handleUpdateUserName} = useApi() ;
+
+  console.log("new user name : ",newUsername) ;
+  console.log("user name : ",username) ;
+  //
 
   const copyAddressToClipboard = async () => {
     if (selectedAccount) {
@@ -69,7 +98,35 @@ export function TopBarWalletMenu() {
     closeMenu();
   };
 
+  // MY CUSTOM FUNCTION
+  const handleChangeUsername = async () => {
+    if (!newUsername.trim()) {
+      Alert.alert("Error", "Username cannot be empty");
+      return;
+    }
+
+    try {
+      const response = await handleUpdateUserName(newUsername);
+      if(response===null) {
+        throw new Error("Failed to update username , don't have response");
+      }
+      else if (response.status === 200) {
+        Alert.alert("Success", "Username updated successfully");
+        setUsername(newUsername)
+      } else {
+        throw new Error("Failed to update username , api failed");
+      }
+    } catch (error) {
+      console.error("Error updating username:", error);
+      Alert.alert("Error", "Failed to update username");
+    }
+
+    setDialogVisible(false);
+    closeMenu();
+  };
+
   return (
+    <>
     <Menu
       visible={visible}
       onDismiss={closeMenu}
@@ -77,6 +134,7 @@ export function TopBarWalletMenu() {
         <TopBarWalletButton
           selectedAccount={selectedAccount}
           openMenu={openMenu}
+          username={username}
         />
       }
     >
@@ -84,6 +142,11 @@ export function TopBarWalletMenu() {
         onPress={copyAddressToClipboard}
         title="Copy address"
         leadingIcon="content-copy"
+      />
+      <Menu.Item
+        onPress={() => setDialogVisible(true)}
+        title="Change User Name"
+        leadingIcon="open-in-new"
       />
       <Menu.Item
         onPress={viewExplorer}
@@ -101,5 +164,28 @@ export function TopBarWalletMenu() {
         leadingIcon="link-off"
       />
     </Menu>
+
+
+          {/* Hộp thoại nhập tên mới */}
+          <Portal>
+        <Dialog visible={isDialogVisible} onDismiss={() => setDialogVisible(false)}>
+          <Dialog.Title>Change Username</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="New Username"
+              value={newUsername}
+              onChangeText={setNewUsername}
+              placeholder="Enter new username"
+              mode="outlined"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
+            <Button onPress={handleChangeUsername}>Save</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+    </>
   );
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { MySignInButton, SignInButton } from '../components/sign-in/sign-in-ui';
+import { TopBar } from '../components/top-bar/top-bar-feature';
 
 const SolanaLoginScreen = () => {
   return (
@@ -20,6 +21,8 @@ const SolanaLoginScreen = () => {
 
       <MySignInButton />
       {/* <SignInButton /> */}
+
+
     </View>
   );
 };

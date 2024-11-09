@@ -1,34 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TextInput, Image, TouchableOpacity , ActivityIndicator  } from 'react-native';
 import BlogItem from '../components/BlogItem';
 import Icon from 'react-native-vector-icons/Ionicons'; 
-import api from '../api/registerAccountApi';
+import useApi from '../utils/useApi';
 import BlogDetailScreen from './BlogDetailScreen';
 
 const TestBlogsScreen = ({navigation}) => {
   const [blogs, setBlogs] = useState([]);
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [page, setPage] = useState(1); // current page
+  const [loading, setLoading] = useState(false);
+  const [noBlogToFetch, setNoBlogToFetch] = useState(false);
+  const {GetBlogs} = useApi() ;
+  
+
+  const PageSize = 3 ;
+  const fetchBlogs = async () => {
+    setLoading(true);
+    try {
+      const response = await GetBlogs(PageSize,page) ;
+      const data = response.data.blogs
+      console.log(response.data.blogs) ;
+      console.log(data.length==0)
+      if(data.length==0) {
+        setNoBlogToFetch(true) ;
+      }
+
+      setBlogs(prevBlogs => [...prevBlogs, ...data]);
+      setPage(prevPage => prevPage + 1);
+    } catch (error) {
+      console.error("Error loading blogs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
-    // Fetch data from API
-    const fetchPosts = async () => {
-      try {
-        const response = await api.get("/blogs");
-        setBlogs(response.data.blogs);
-        console.log(response.data.blogs) ;
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      }
-    };
-    fetchPosts();
+    fetchBlogs();
   }, []);
 
+  const handleLoadMore = () => {
+    if (!loading && !noBlogToFetch) {
+      console.log("Loading More")
+      fetchBlogs();
+    }
+  };
 
   const handlePress = (blogId) => {
     console.log("Navigating to BlogDetailScreen with ID:", blogId);
     navigation.navigate('BlogDetailScreen',{ blogId: blogId });
   };
-  console.log(navigation)
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -46,6 +68,11 @@ const TestBlogsScreen = ({navigation}) => {
             <BlogItem {...item}/>               
             </TouchableOpacity>)
         }
+
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={1}
+        ListFooterComponent={loading ? <ActivityIndicator size="large" /> : null}
+        
       />
     </View>
   );

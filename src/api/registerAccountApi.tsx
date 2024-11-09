@@ -8,7 +8,9 @@ const api = axios.create({
 });
 
 const getAccessToken = async () => {
-  return await AsyncStorage.getItem("accessToken");
+  const tmp = await AsyncStorage.getItem("accessToken");
+  console.log("access token in device : ",tmp) ;
+  return tmp ;
 };
 
 const getRefreshToken = async () => {

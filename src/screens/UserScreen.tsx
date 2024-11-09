@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';  // Import icon
 import Header from '../components/Header';
@@ -10,20 +10,16 @@ import { Section } from "../Section";
 import UserSignedInScreen from './UserScreenSignedIn';
 import SolanaLoginScreen from './SolanaLoginScreen';
 
+
 const UserPage = ({navigation}) => {
   const { selectedAccount } = useAuthorization(); 
-  // MyRegisterAccFunc() ;
+  
 
   return (
     <View style={styles.container}>
       {selectedAccount==null ? 
       (<>
-          {/* <TopBar />
-          <Section
-            title="Get started!"
-            description="Connect or Sign in with Solana (SIWS) to link your wallet account."
-          />
-          <SignInFeature /> */}
+
           <SolanaLoginScreen />
 
         </>) : ( <View style={styles.container}>

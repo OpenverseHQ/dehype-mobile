@@ -1,5 +1,5 @@
-import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import CategoryCollection from '../components/CategoryCollection';
 import Category from '../components/Category';
@@ -9,8 +9,21 @@ import api from '../api/registerAccountApi';
 
 
 const HomeScreen2 = ({ navigation, route }: any) => {
-  const [marketData, setMarketData] = useState<any[]>([]); // Kiểm tra kiểu dữ liệu
 
+  const [marketData, setMarketData] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/category');
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách category:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -21,7 +34,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
         const marketsWithStats = await Promise.all(
           markets.map(async (market: any) => {
             const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-            return { ...market, marketStats: statsResponse.data }; 
+            return { ...market, marketStats: statsResponse.data };
           })
         );
 
@@ -34,25 +47,23 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     fetchMarketData();
   }, []);
 
+
   const filterByCategory = (category: string) => {
     return marketData.filter((market: any) => market.category === category);
   };
 
-  const [selectedTab, setSelectedTab] = useState('All');  // Đặt mặc định là "All"
+  const [selectedTab, setSelectedTab] = useState('All'); 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'yellow' }}>
+    <SafeAreaView style={{ flex: 1 }}>
       <Header />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <View><Text style={styles.text_cate}>Category</Text></View>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-            <Category nameCategory='Sports' />
-            <Category nameCategory='Technology' />
-            <Category nameCategory='Finance' />
-            <Category nameCategory='News' />
-            <Category nameCategory='Entertaiment' />
-            <Category nameCategory='Politics' />
+            {categories.map((category) => (
+              <Category key={category.id} id={category.id} nameCategory={category.name} coverUrl={category.coverUrl} />
+            ))}
           </ScrollView>
         </View>
 
@@ -87,6 +98,8 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                   publicKey={market.publicKey}
                   title={market.title}
                   coverUrl={market.coverUrl}
+                  participants={market.participants}
+                  totalVolume={market.totalVolume}
                   marketStats={market.marketStats}
                 />
               ))}
@@ -145,6 +158,7 @@ export default HomeScreen2;
 const styles = StyleSheet.create({
   container: {
     padding: 10,
+    paddingBottom:0,
     backgroundColor: '#fff',
   },
   text_cate: {
@@ -177,12 +191,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center'
-  },
-  sportCollection: {
-
-  },
-  headerSportCollection: {
-
   },
 
 });

@@ -26,9 +26,18 @@
       "permissions": [
         "CAMERA",
         "WRITE_EXTERNAL_STORAGE",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION"
       ]
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow $(solona-mobile-expo-template) to access your camera to let you take and choose photos."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },

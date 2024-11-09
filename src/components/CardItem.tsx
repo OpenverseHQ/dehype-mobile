@@ -15,8 +15,6 @@ interface AnswerStats {
 }
 
 interface MarketStats {
-    numVoters: number;
-    totalVolume: number;
     answerStats: AnswerStats[];
 }
 
@@ -24,10 +22,12 @@ interface CardItems {
     publicKey: string;
     title: string;
     coverUrl: string;
+    participants: number;
+    totalVolume: number;
     marketStats: MarketStats;
 }
 
-const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats }) => {
+const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats }) => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [isLiked, setIsLiked] = useState(false);
 
@@ -67,8 +67,8 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, marketStats
             <View style={styles.footer}>
                 <Text style={styles.footerText}> Ended Sep 27 | {marketStats.answerStats.length} outcomes</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 12 }}><Icon size={14} name='account-multiple' /> {marketStats.numVoters}</Text>
-                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon size={14} name='poll' /> {marketStats.totalVolume}</Text>
+                    <Text style={{ fontSize: 12 }}><Icon size={14} name='account-multiple' /> {participants}</Text>
+                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon size={14} name='poll' /> {totalVolume}</Text>
                     <Image source={{ uri: coverUrl }} style={{ width: 14, height: 14, marginLeft: 8 }} />
                 </View>
             </View>

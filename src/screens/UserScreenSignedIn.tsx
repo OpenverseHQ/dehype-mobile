@@ -14,13 +14,53 @@ import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {useNavigation} from "@react-navigation/native"
 import { useGetSignatures } from '../components/account/account-data-access';
 
+import useApi from '../utils/useApi';
+import { useEffect , useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback } from 'react';
+
 function lamportsToSol(balance: number) {
     return Math.round((balance / LAMPORTS_PER_SOL) * 100000) / 100000;
 }
 
-const UserSignedInScreen = ({address , navigation}) => {
+const UserSignedInScreen = ({address , navigation }) => {
   var query =  useGetBalance({address}) ;
   var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL": "..." ;
+
+  const {handleGetUserInfo} = useApi() ;
+  const [userInfo, setUserInfo] = useState({
+    "walletAddress": "AXvu8CZGasQ72sHVBD9cdYBqKvb7PR6VtHA55JYYXAPA",
+    "username": "Hoang",
+    "avatarUrl": "https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png",
+    "joinedMarkets": 0,
+    "profitLoss": 0,
+    "totalAmount": 0
+  });
+
+  useEffect( ()=>{
+    const fetchUserInfo = async () => {
+      try {
+        const userInfo = await handleGetUserInfo(address);
+        setUserInfo(userInfo);
+        console.log("User info:", userInfo);
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    };
+
+    fetchUserInfo();
+  }
+  ,[address]) ;
+
+  const handlePress = useCallback(() => {
+    navigation.navigate("UploadImageScreen", { userAvatar: userInfo.avatarUrl , 
+      onUploadComplete: (newAvatarUrl) => {
+        if (newAvatarUrl) {
+          setUserInfo((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
+        }
+      }
+    });
+  }, [navigation, userInfo]);
 
   //const navigation = useNavigation() ;
   return (
@@ -30,16 +70,22 @@ const UserSignedInScreen = ({address , navigation}) => {
       {/* Thông tin người dùng */}
       <View style={styles.userInfo}>
         <View style={styles.userInfo}>
-        <Image
-          source={{ uri: 'https://i.pinimg.com/564x/14/95/ab/1495ab1beb290e7816599607d9cf78b2.jpg' }}  // Thay bằng avatar người dùng
-          style={styles.avatar}
-        />
+        <TouchableOpacity
+         onPress={()=>handlePress()}
+        >
+          <Image
+            // source={{ uri: 'https://i.pinimg.com/564x/14/95/ab/1495ab1beb290e7816599607d9cf78b2.jpg' }}  // Thay bằng avatar người dùng
+            source={{ uri: userInfo.avatarUrl }}
+            style={styles.avatar}
+          />
+        </TouchableOpacity>
         <View>
           {/* <Text style={styles.username}>ThangTran</Text>
           <Text style={styles.userId}>aE7PsbmYTG3ZyK</Text> */}
           <TopBar/>
         </View>
         </View>
+
         <View style={styles.favorite}>
           <Text style={styles.favoriteText}>Favorite</Text>
           <Icon name="heart-circle-sharp" size={24} color="red" />
