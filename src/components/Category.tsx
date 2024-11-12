@@ -67,5 +67,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     paddingHorizontal: 10,
+    textShadowColor: 'black',  // Màu viền
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 1,
+
   },
 })

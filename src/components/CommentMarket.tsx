@@ -132,7 +132,6 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       isPublic: true, // Attach isPublic directly
     } as any);
 
-    console.log(response.data);
     const { access_token, refresh_token } = response.data;
     await AsyncStorage.setItem("accessToken", access_token);
     await AsyncStorage.setItem("refreshToken", refresh_token);
@@ -151,13 +150,14 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       showAlert();
       return;
     }
-    await handleGetAccess(selectedAccount.publicKey); // Get access & refresh
+    await handleGetAccess(selectedAccount.publicKey);
 
     const newCommentObj = {
       content: newComment,
     };
     try {
       const response = await api.post(`/markets/${idMarket}/comments`, newCommentObj);
+      const response_user = await api.get(`/users/${response.data.user.walletAddress}`);
 
       if (response.status === 200 || response.status === 201) {
 
@@ -165,8 +165,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           id: response.data.id,
           text: response.data.comment,
           walletAddress: response.data.user.walletAddress,
-          username: response.data.user?.walletAddress || 'Anonymous',
-          avatarUrl: 'https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png',
+          username: response_user.data.username || 'Anonymous',
+          avatarUrl: response_user.data.avatarUrl,
           createAt: new Date(response.data.createdAt).toLocaleString(),
           updateAt: new Date(response.data.updatedAt).toLocaleString(),
           replies: [],
@@ -186,6 +186,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     if (selectedAccount == null) {
       Alert.alert('You need to log in to perform this function')
     }
+    await handleGetAccess(selectedAccount.publicKey);
 
     try {
       const targetId = replyId || parentId;
@@ -221,11 +222,15 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     if (selectedAccount == null) {
       Alert.alert('You need to log in to perform this function')
     }
+    await handleGetAccess(selectedAccount.publicKey); // Get access & refresh
     try {
       const targetId = replyId || parentId;
-      const response = await api.patch(`/markets/${idMarket}/comments/${targetId}`, {
+      const requestUrl = `/markets/${idMarket}/comments/${targetId}`;
+
+      const response = await api.patch(requestUrl, {
         content: updatedText,
       });
+
 
       if (response.status === 200) {
         setComments(prevComments =>
@@ -276,8 +281,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   };
 
   const handlePostReply = async (commentId: string) => {
+    await handleGetAccess(selectedAccount.publicKey);
     const replyContent = replyText[commentId];
-
     const newReplyObj = {
       content: replyContent,
     };
@@ -285,6 +290,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     try {
       // Gọi API để tạo reply mới
       const response = await api.post(`/markets/${idMarket}/comments/${commentId}/replies`, newReplyObj);
+      const response_user = await api.get(`/users/${response.data.user.walletAddress}`);
+
 
       if (response.status === 200 || response.status === 201) {
         const newReply: Reply = {
@@ -293,9 +300,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           createAt: new Date(response.data.createdAt).toLocaleString(),
           updateAt: new Date(response.data.updatedAt).toLocaleString(),
           user: {
-            walletAddress: response.data.user?.walletAddress,
-            username: response.data.user.walletAddress || 'Anonymous',
-            avatarUrl: response.data.user?.avatarUrl || 'https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png',
+            walletAddress: response.data.user.walletAddress,
+            username: response_user.data.walletAddress || 'Anonymous',
+            avatarUrl: response_user.data.avatarUrl,
           },
         };
 

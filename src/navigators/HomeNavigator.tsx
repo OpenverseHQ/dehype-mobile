@@ -21,11 +21,12 @@ import FilterScreen from "../screens/FilterScreen";
 import FilterResultScreen from '../screens/FilterResultScreen';
 import BlogDetailScreen from "../screens/BlogDetailScreen";
 import TestapiScreen from "../screens/TestapiScreen";
-import TestBlogsScreen from "../screens/TestBlogScreen";
+import BlogsApiScreen from "../screens/BlogApiScreen";
 import UserSignedInScreen from "../screens/UserScreenSignedIn";
 import DetailMarketScreen from "../screens/DetailMarketScreen";
 import SolanaLoginScreen from "../screens/SolanaLoginScreen";
 import UploadImageScreen from "../screens/UploadImageScreen";
+import ChartScreen from "../screens/ChartScreen";
 
 const Stack = createNativeStackNavigator();
 const UserStack = () => (
@@ -54,7 +55,7 @@ const UserStack = () => (
 const Stack2 = createNativeStackNavigator();
 const BlogStack = () => (
   <Stack2.Navigator>
-    <Stack2.Screen name="BlogsScreen" component={TestBlogsScreen} 
+    <Stack2.Screen name="BlogsScreen" component={BlogsApiScreen} 
     options={{ headerShown: false }}
     />
     <Stack2.Screen name="BlogDetailScreen" component={BlogDetailScreen} 
@@ -118,7 +119,7 @@ function MyTabs() {
       <Tab2.Screen name="Notification" component={NotifiScreen} />
       <Tab2.Screen name="User" component={UserStack} />
       {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */} 
-      {/* <Tab2.Screen name="ImgUp" component ={UploadImageScreen} /> */}
+      <Tab2.Screen name="Chart" component ={ChartScreen} />
     </Tab2.Navigator>
   );
 }

@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import useApi from '../utils/useApi';
 import BlogDetailScreen from './BlogDetailScreen';
 
-const TestBlogsScreen = ({navigation}) => {
+const BlogsApiScreen = ({navigation}) => {
   const [blogs, setBlogs] = useState([]);
   const [page, setPage] = useState(1); // current page
   const [loading, setLoading] = useState(false);
@@ -113,4 +113,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TestBlogsScreen;
+export default BlogsApiScreen;

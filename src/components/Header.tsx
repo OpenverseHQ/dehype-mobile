@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, StyleSheet, Alert, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import debounce from 'lodash.debounce';
 import api from '../api/registerAccountApi';
@@ -33,75 +33,65 @@ const Header: React.FC<HeaderProps> = () => {
                 setModalVisible(false);
                 return;
             }
+
             try {
-                const response = await api.get(`/markets`, { params: { query } });
-                const markets = response.data;
-
-                const marketsWithStats = await Promise.all(
-                    markets.map(async (market: any) => {
-                        const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-                        return { ...market, marketStats: statsResponse.data };
-                    })
-                );
-
-                const results = marketsWithStats.filter((item: { title: string }) =>
-                    item.title.toLowerCase().includes(query.toLowerCase())
-                );
+                const response = await api.get(`/search`, {
+                    params: { q: query },
+                });
+                const results = response.data;
                 setSearchResults(results);
                 setModalVisible(results.length > 0);
             } catch (error) {
-                Alert.alert('Error', 'An error occurred while searching.');
+                Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tìm kiếm.');
                 console.error(error);
             }
         }, 500),
         []
     );
 
+
     const handleTextChange = (text: string) => {
         setSearchQuery(text);
         handleSearch(text);
     };
+    const handleOutsidePress = () => {
+        setModalVisible(false);
+        Keyboard.dismiss(); 
+    };
 
     return (
-        <View style={styles.header}>
-            <View style={styles.text_image}>
-                <Image style={styles.image} source={require('../../assets/image.png')} />
-                <Text style={styles.text}>Dehype</Text>
-            </View>
-            <View style={styles.search}>
-                <Icon name="search" style={styles.icon_search} />
-                <TextInput
-                    placeholder="Search Markets"
-                    style={styles.text_input}
-                    onChangeText={handleTextChange}
-                    value={searchQuery}
-                />
-            </View>
-            {modalVisible && (
-                <View style={styles.resultContainer}>
-                    <ScrollView nestedScrollEnabled={true}>
-                        {searchResults.map((item) => (
-                            <TouchableOpacity key={item.publicKey.toString()} onPress={() => navigation.navigate('DetailMarket', { publicKey: item.publicKey })}>
-                                <View style={styles.resultItem}>
-                                    <Image source={{ uri: item.coverUrl }} style={styles.resultIcon} />
-                                    <View>
-                                        <Text style={styles.resultText}>{item.title}</Text>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 5 }}>
-                                            <Text style={{ fontSize: 14 }}>
-                                                <Icon size={14} name='people' /> {item.marketStats.participants}
-                                            </Text>
-                                            <Text style={{ fontSize: 14, marginLeft: 8 }}>
-                                                <Icon size={14} name='stats-chart' /> {item.marketStats.totalVolume}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
+        <TouchableWithoutFeedback onPress={handleOutsidePress}>
+            <View style={styles.header}>
+                <View style={styles.text_image}>
+                    <Image style={styles.image} source={require('../../assets/image.png')} />
+                    <Text style={styles.text}>Dehype</Text>
                 </View>
-            )}
-        </View>
+                <View style={styles.search}>
+                    <Icon name="search" style={styles.icon_search} />
+                    <TextInput
+                        placeholder="Search Markets"
+                        style={styles.text_input}
+                        onChangeText={handleTextChange}
+                        value={searchQuery}
+                    />
+                </View>
+                {modalVisible && (
+                    <View style={styles.resultContainer}>
+                        <ScrollView nestedScrollEnabled={true}>
+                            {searchResults.map((item) => (
+                                <TouchableOpacity key={item.marketId.toString()} onPress={() => navigation.navigate('DetailMarket', { publicKey: item.marketId })}>
+                                    <View style={styles.resultItem}>
+                                        <Image source={{ uri: item.coverUrl }} style={styles.resultIcon} />
+                                        <Text style={styles.resultText}>{item.title}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                )}
+            </View>
+        </TouchableWithoutFeedback>
+
     );
 };
 export default Header;
@@ -155,19 +145,24 @@ const styles = StyleSheet.create({
         position: 'absolute',
         zIndex: 200,
         padding: 5,
-        top: 62, 
-        left: '5%', 
-        right: '5%', 
-        backgroundColor: '#f5f5f5',
+        top: 62,
+        left: '5%',
+        right: '5%',
+        backgroundColor: '#f0f5ff',
         borderRadius: 10,
-        width: '90%', 
+        width: '90%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 4,
     },
     resultItem: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 10,
         paddingLeft: 5,
-        borderBottomWidth: 1,
+        borderBottomWidth: 2,
         borderBottomColor: '#eee',
     },
     resultIcon: {

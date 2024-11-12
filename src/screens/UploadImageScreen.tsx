@@ -3,11 +3,14 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import useApi from '../utils/useApi';
+import {useNavigation} from "@react-navigation/native"
+
 
 const UploadImageScreen = ({ route }) => {
   const [imageUri, setImageUri] = useState(null);
   const { userAvatar , onUploadComplete } = route.params;
   const { UploadAvatar, handleGetUserInfo } = useApi();
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (userAvatar) {
@@ -46,9 +49,14 @@ const UploadImageScreen = ({ route }) => {
     if (!result.canceled) {
       const resizedImage = await resizeImage(result.assets[0].uri);
       setImageUri(resizedImage.uri);
-      await UploadAvatar(resizedImage.uri);
-      onUploadComplete(resizedImage.uri)
+      // await UploadAvatar(resizedImage.uri);
+      // onUploadComplete(resizedImage.uri) ;
     }
+  };
+  const uploadavatar = async () => {
+      await UploadAvatar(imageUri);
+      onUploadComplete(imageUri) ;
+      navigation.goBack();
   };
 
   return (
@@ -67,6 +75,9 @@ const UploadImageScreen = ({ route }) => {
 
       <TouchableOpacity style={styles.button} onPress={pickImage}>
         <Text style={styles.buttonText}>Choose Image</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={uploadavatar}>
+        <Text style={styles.buttonText}>Update avatar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -117,6 +128,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 8,
     elevation: 3,
+    margin:10,
   },
   buttonText: {
     color: '#282C34',
