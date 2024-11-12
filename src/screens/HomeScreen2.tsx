@@ -6,6 +6,8 @@ import Category from '../components/Category';
 import CardItemTrend from '../components/CardItemTrend';
 import CardItem from '../components/CardItem';
 import api from '../api/registerAccountApi';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 
 
 const HomeScreen2 = ({ navigation, route }: any) => {
@@ -86,6 +88,9 @@ const HomeScreen2 = ({ navigation, route }: any) => {
             onPress={() => setSelectedTab('Newest')}
           >
             <Text style={styles.tabText}>Newest</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filter} onPress={() => navigation.navigate('Filter')}>
+            <Icon name='filter-variant' size={20} />
           </TouchableOpacity>
         </View>
 
@@ -192,5 +197,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center'
   },
+  filter: {
+    position: 'absolute',
+    right: 10,
+    padding: 10,
+  }
 
 });

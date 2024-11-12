@@ -58,7 +58,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Đợi tí...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
