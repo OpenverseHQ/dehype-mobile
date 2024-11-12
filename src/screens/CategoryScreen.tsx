@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View, ScrollView, Image, TouchableOpacity } from 'react-native'
+import { Text, StyleSheet, View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native'
 import React, { Component, useState, useEffect } from 'react'
 import CardItem from '../components/CardItem'
 import Header from '../components/Header';
@@ -19,6 +19,7 @@ interface CategoryScreenProps {
 const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) => {
     const { id, nameCate } = route.params;
     const [marketData, setMarketData] = useState<any[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
 
     const fetchData = async () => {
         try {
@@ -32,6 +33,7 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
                 })
             );
             setMarketData(marketsWithStats);
+            setLoading(false);
         } catch (error) {
             console.error('Lỗi khi lấy dữ liệu:', error);
         }
@@ -40,6 +42,8 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
     useEffect(() => {
         fetchData();
     }, [id]);
+    
+    if (loading) return <ActivityIndicator size="large" color="#0000ff" style={{ margin: 20 }} />;
 
     return (
         <View style={styles.container}>
