@@ -112,7 +112,7 @@ function MyTabs() {
       <Tab2.Screen name="Notification" component={NotifiScreen} />
       <Tab2.Screen name="User" component={UserStack} />
       {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */} 
-      <Tab2.Screen name="Api" component ={SolanaLoginScreen} />
+      {/* <Tab2.Screen name="Api" component ={SolanaLoginScreen} /> */}
     </Tab2.Navigator>
   );
 }

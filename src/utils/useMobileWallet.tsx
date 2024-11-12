@@ -86,7 +86,7 @@ export function useMobileWallet() {
         var signature = new Uint8Array(10);
         console.log("nonce : ",nonce);
         if (nonce=="0") { // Tai khoan da dang ky
-          handleGetAccess(authResult.publicKey) ;
+          await handleGetAccess(authResult.publicKey) ;
           return signature ;
         }
         // Confirm Sign in     OR sign up 
@@ -106,7 +106,7 @@ export function useMobileWallet() {
         console.log("sig : ", sig);
         // Neu co Nonce , goi API 2 de confirm va create acc
         await AccountCreate(authResult.publicKey,nonce,sig)
-        handleGetAccess(authResult.publicKey) ;
+        await handleGetAccess(authResult.publicKey) ;
         return signature; // Trả về signature
       });
     },

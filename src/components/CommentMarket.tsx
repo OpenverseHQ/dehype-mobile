@@ -132,7 +132,6 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       isPublic: true, // Attach isPublic directly
     } as any);
 
-    console.log(response.data);
     const { access_token, refresh_token } = response.data;
     await AsyncStorage.setItem("accessToken", access_token);
     await AsyncStorage.setItem("refreshToken", refresh_token);
@@ -151,7 +150,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
       showAlert();
       return;
     }
-    await handleGetAccess(selectedAccount.publicKey); // Get access & refresh
+    await handleGetAccess(selectedAccount.publicKey); 
 
     const newCommentObj = {
       content: newComment,
@@ -186,6 +185,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     if (selectedAccount == null) {
       Alert.alert('You need to log in to perform this function')
     }
+    await handleGetAccess(selectedAccount.publicKey); 
 
     try {
       const targetId = replyId || parentId;
@@ -221,11 +221,15 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     if (selectedAccount == null) {
       Alert.alert('You need to log in to perform this function')
     }
+    await handleGetAccess(selectedAccount.publicKey); // Get access & refresh
     try {
       const targetId = replyId || parentId;
-      const response = await api.patch(`/markets/${idMarket}/comments/${targetId}`, {
+      const requestUrl = `/markets/${idMarket}/comments/${targetId}`;
+
+      const response = await api.patch(requestUrl, {
         content: updatedText,
       });
+
 
       if (response.status === 200) {
         setComments(prevComments =>
