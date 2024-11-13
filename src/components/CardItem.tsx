@@ -2,6 +2,7 @@ import { Text, StyleSheet, View, TouchableOpacity, Image } from 'react-native';
 import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import api from '../api/registerAccountApi';
 
 type RootStackParamList = {
     DetailMarket: { publicKey: string };
@@ -34,8 +35,22 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
     const toggleHeartColor = () => {
         setIsLiked(!isLiked);
     };
+    const handlePress = () => {
+        upView(publicKey);
+        navigation.navigate('DetailMarket', { publicKey });
+    };
+
+    const upView = async (id) => {
+        try {
+            const response = await api.post(`/markets/${id}/view`);
+            console.log('View count updated successfully:', response.data);
+        } catch (error) {
+            console.error('Error updating view count:', error);
+        }
+    };
+
     return (
-        <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('DetailMarket', { publicKey })}>
+        <TouchableOpacity style={styles.card} onPress={handlePress}>
             <View style={styles.cardHeader}>
                 <View style={styles.leftSection}>
                     <Image

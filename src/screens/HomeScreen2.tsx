@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 const HomeScreen2 = ({ navigation, route }: any) => {
 
   const [marketData, setMarketData] = useState<any[]>([]);
+  const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const fetchCategories = async () => {
     try {
@@ -22,7 +23,26 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       console.error('Lỗi khi lấy danh sách category:', error);
     }
   };
+  const fetchMarketFavorite = async () => {
+    try {
+      const response = await api.get('/search/details?fav=true');
+      const markets = response.data;
 
+      const marketsWithStats = await Promise.all(
+        markets.map(async (market: any) => {
+          const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
+          return { ...market, marketStats: statsResponse.data };
+        })
+      );
+      setMarketFavoriteData(marketsWithStats);
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách favorite market:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMarketFavorite();
+  }, []);
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -54,7 +74,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     return marketData.filter((market: any) => market.category === category);
   };
 
-  const [selectedTab, setSelectedTab] = useState('All'); 
+  const [selectedTab, setSelectedTab] = useState('All');
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -88,6 +108,12 @@ const HomeScreen2 = ({ navigation, route }: any) => {
             onPress={() => setSelectedTab('Newest')}
           >
             <Text style={styles.tabText}>Newest</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'Favorite' && styles.activeTab]}
+            onPress={() => setSelectedTab('Favorite')}
+          >
+            <Text style={styles.tabText}>Favorite</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.filter} onPress={() => navigation.navigate('Filter')}>
             <Icon name='filter-variant' size={20} />
@@ -136,7 +162,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                 ))}
               </ScrollView>
             </>
-          ) : (
+          ) : selectedTab === 'Newest' ? (
             <>
               <CategoryCollection nameCategory='Entertaiment' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
@@ -146,6 +172,22 @@ const HomeScreen2 = ({ navigation, route }: any) => {
               </ScrollView>
               <CategoryCollection nameCategory='News' />
               <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+              </ScrollView>
+            </>
+          ) : (
+            <>
+              <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
+                {marketFavoriteData.map((market: any) => (
+                  <CardItem
+                    key={market.publicKey}
+                    publicKey={market.publicKey}
+                    title={market.title}
+                    coverUrl={market.coverUrl}
+                    participants={market.participants}
+                    totalVolume={market.totalVolume}
+                    marketStats={market.marketStats}
+                  />
+                ))}
               </ScrollView>
             </>
           )}
@@ -163,7 +205,7 @@ export default HomeScreen2;
 const styles = StyleSheet.create({
   container: {
     padding: 10,
-    paddingBottom:0,
+    paddingBottom: 0,
     backgroundColor: '#fff',
   },
   text_cate: {

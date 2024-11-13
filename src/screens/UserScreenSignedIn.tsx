@@ -8,26 +8,29 @@ import { TopBar } from '../components/top-bar/top-bar-feature';
 import { useAuthorization } from '../utils/useAuthorization';
 import { SignInFeature } from '../components/sign-in/sign-in-feature';
 import { Section } from "../Section";
-import { AccountBalance , AccountButtonGroup , AccountTokens } from '../components/account/account-ui';
+import { AccountBalance, AccountButtonGroup, AccountTokens } from '../components/account/account-ui';
 import { useGetBalance } from '../components/account/account-data-access';
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import {useNavigation} from "@react-navigation/native"
+import { useNavigation } from "@react-navigation/native"
 import { useGetSignatures } from '../components/account/account-data-access';
 
 import useApi from '../utils/useApi';
-import { useEffect , useState } from 'react';
+import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback } from 'react';
+import api from '../api/registerAccountApi';
 
 function lamportsToSol(balance: number) {
-    return Math.round((balance / LAMPORTS_PER_SOL) * 100000) / 100000;
+  return Math.round((balance / LAMPORTS_PER_SOL) * 100000) / 100000;
 }
 
-const UserSignedInScreen = ({address , navigation }) => {
-  var query =  useGetBalance({address}) ;
-  var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL": "..." ;
+const UserSignedInScreen = ({ address, navigation }) => {
+  var query = useGetBalance({ address });
+  var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL" : "...";
+  const [quantity, setQuantity] = useState('0');
 
-  const {handleGetUserInfo} = useApi() ;
+
+  const { handleGetUserInfo } = useApi();
   const [userInfo, setUserInfo] = useState({
     "walletAddress": "AXvu8CZGasQ72sHVBD9cdYBqKvb7PR6VtHA55JYYXAPA",
     "username": "Hoang",
@@ -37,7 +40,7 @@ const UserSignedInScreen = ({address , navigation }) => {
     "totalAmount": 0
   });
 
-  useEffect( ()=>{
+  useEffect(() => {
     const fetchUserInfo = async () => {
       try {
         const userInfo = await handleGetUserInfo(address);
@@ -50,10 +53,11 @@ const UserSignedInScreen = ({address , navigation }) => {
 
     fetchUserInfo();
   }
-  ,[address]) ;
+    , [address]);
 
   const handlePress = useCallback(() => {
-    navigation.navigate("UploadImageScreen", { userAvatar: userInfo.avatarUrl , 
+    navigation.navigate("UploadImageScreen", {
+      userAvatar: userInfo.avatarUrl,
       onUploadComplete: (newAvatarUrl) => {
         if (newAvatarUrl) {
           setUserInfo((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
@@ -61,6 +65,18 @@ const UserSignedInScreen = ({address , navigation }) => {
       }
     });
   }, [navigation, userInfo]);
+
+  const getQuantityFavorite = async () => {
+    try {
+      const response = await api.get('/search/details?fav=true');
+      setQuantity(response.data.length);
+    } catch (error) {
+      console.error('Lỗi khi lấy quantity:', error);
+    }
+  };
+  useEffect(() => {
+    getQuantityFavorite();
+  }, []);
 
   //const navigation = useNavigation() ;
   return (
@@ -70,33 +86,36 @@ const UserSignedInScreen = ({address , navigation }) => {
       {/* Thông tin người dùng */}
       <View style={styles.userInfo}>
         <View style={styles.userInfo}>
-        <TouchableOpacity
-         onPress={()=>handlePress()}
-        >
-          <Image
-            // source={{ uri: 'https://i.pinimg.com/564x/14/95/ab/1495ab1beb290e7816599607d9cf78b2.jpg' }}  // Thay bằng avatar người dùng
-            source={{ uri: userInfo.avatarUrl }}
-            style={styles.avatar}
-          />
-        </TouchableOpacity>
-        <View>
-          {/* <Text style={styles.username}>ThangTran</Text>
+          <TouchableOpacity
+            onPress={() => handlePress()}
+          >
+            <Image
+              // source={{ uri: 'https://i.pinimg.com/564x/14/95/ab/1495ab1beb290e7816599607d9cf78b2.jpg' }}  // Thay bằng avatar người dùng
+              source={{ uri: userInfo.avatarUrl }}
+              style={styles.avatar}
+            />
+          </TouchableOpacity>
+          <View>
+            {/* <Text style={styles.username}>ThangTran</Text>
           <Text style={styles.userId}>aE7PsbmYTG3ZyK</Text> */}
-          <TopBar/>
-        </View>
+            <TopBar />
+          </View>
         </View>
 
-        <View style={styles.favorite}>
-          <Text style={styles.favoriteText}>Favorite</Text>
-          <Icon name="heart-circle-sharp" size={24} color="red" />
-        </View>
+        <TouchableOpacity style={styles.favorite} onPress={() => { navigation.navigate('Home') }}>
+          <Icon name='heart-circle' size={40} color={'#777'} />
+          <View style={styles.favoriteBadge}>
+            <Text style={styles.favoriteBadgeText}>{quantity}</Text>
+          </View>
+        </TouchableOpacity>
+
       </View>
 
       {/* Thẻ thống kê */}
       <View style={styles.cardContainer}>
-        <TouchableOpacity 
-        style={styles.card}
-        onPress={() => navigation.navigate('SolonaScreen')}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('SolonaScreen')}
         >
           <Icon name="pulse-outline" size={30} color="#000" />
           <Text style={styles.cardTitle}>Position Value</Text>
@@ -160,19 +179,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-    marginTop:10,
+    marginTop: 10,
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 5,
-    marginTop:5 ,
+    marginTop: 5,
   },
   username: {
     fontSize: 18,
     fontWeight: 'bold',
-    justifyContent:"flex-start" ,
+    justifyContent: "flex-start",
   },
   userId: {
     fontSize: 12,
@@ -181,8 +200,8 @@ const styles = StyleSheet.create({
   favorite: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:'flex-end',
-
+    justifyContent: 'flex-end',
+    paddingRight: 15,
   },
   favoriteText: {
     fontSize: 16,
@@ -212,6 +231,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 5,
   },
+  favoriteBadge: {
+    position: 'absolute',
+    top: 25,
+    right: 10,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  favoriteBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
 });
 
 export default UserSignedInScreen;
