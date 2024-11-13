@@ -15,6 +15,8 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const [marketData, setMarketData] = useState<any[]>([]);
   const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+
+
   const fetchCategories = async () => {
     try {
       const response = await api.get('/category');
@@ -23,29 +25,32 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       console.error('Lỗi khi lấy danh sách category:', error);
     }
   };
-  const fetchMarketFavorite = async () => {
-    try {
-      const response = await api.get('/search/details?fav=true');
-      const markets = response.data;
 
-      const marketsWithStats = await Promise.all(
-        markets.map(async (market: any) => {
-          const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-          return { ...market, marketStats: statsResponse.data };
-        })
-      );
-      setMarketFavoriteData(marketsWithStats);
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách favorite market:', error);
-    }
-  };
 
   useEffect(() => {
-    fetchMarketFavorite();
+    const fetchMarketFavorite = async () => {
+      try {
+        const response = await api.get('/search/details?fav=true');
+        const markets = response.data;
+        console.log(response.data)
+
+        const marketsWithStats = await Promise.all(
+          markets.map(async (market: any) => {
+            const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
+            return { ...market, marketStats: statsResponse.data };
+          })
+        );
+        setMarketFavoriteData(marketsWithStats);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách favorite market:', error);
+      }
+    };
+    const unsubscribe = navigation.addListener('focus', fetchMarketFavorite);
+    return unsubscribe;
   }, []);
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [navigation]);
 
   useEffect(() => {
     const fetchMarketData = async () => {

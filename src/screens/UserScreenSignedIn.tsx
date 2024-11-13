@@ -45,7 +45,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
       try {
         const userInfo = await handleGetUserInfo(address);
         setUserInfo(userInfo);
-        console.log("User info:", userInfo);
+        // console.log("User info:", userInfo);
       } catch (error) {
         console.error("Error fetching user info:", error);
       }
@@ -66,17 +66,22 @@ const UserSignedInScreen = ({ address, navigation }) => {
     });
   }, [navigation, userInfo]);
 
-  const getQuantityFavorite = async () => {
-    try {
-      const response = await api.get('/search/details?fav=true');
-      setQuantity(response.data.length);
-    } catch (error) {
-      console.error('Lỗi khi lấy quantity:', error);
-    }
-  };
   useEffect(() => {
-    getQuantityFavorite();
-  }, []);
+    const getQuantityFavorite = async () => {
+      try {
+        const response = await api.get('/search/details?fav=true');
+        console.log(response.data)
+        setQuantity(response.data.length);
+      } catch (error) {
+        console.error('Lỗi khi lấy quantity:', error);
+      }
+    };
+    const unsubscribe = navigation.addListener('focus', getQuantityFavorite);
+    return unsubscribe;
+  }, [navigation]);
+
+
+
 
   //const navigation = useNavigation() ;
   return (

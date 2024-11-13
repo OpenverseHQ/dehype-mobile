@@ -32,7 +32,16 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [isLiked, setIsLiked] = useState(false);
 
+    const addLike = async (id) => {
+        try {
+            const response = await api.post(`/markets/${id}/like`);
+            console.log('Add like updated successfully:', response.data);
+        } catch (error) {
+            console.error('Error updating ddd like:', error);
+        }
+    };
     const toggleHeartColor = () => {
+        addLike(publicKey);
         setIsLiked(!isLiked);
     };
     const handlePress = () => {

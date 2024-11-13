@@ -119,7 +119,7 @@ function MyTabs() {
       <Tab2.Screen name="Notification" component={NotifiScreen} />
       <Tab2.Screen name="User" component={UserStack} />
       {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */} 
-      <Tab2.Screen name="Chart" component ={ChartScreen} />
+      {/* <Tab2.Screen name="Chart" component ={ChartScreen} /> */}
     </Tab2.Navigator>
   );
 }
