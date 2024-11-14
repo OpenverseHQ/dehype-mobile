@@ -26,11 +26,12 @@ interface CardItems {
     participants: number;
     totalVolume: number;
     marketStats: MarketStats;
+    favourites: any
 }
 
-const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats }) => {
+const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats, favourites }) => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-    const [isLiked, setIsLiked] = useState(false);
+    const [isLiked, setIsLiked] = useState(favourites.includes(publicKey));
 
     const addLike = async (id) => {
         try {
@@ -40,10 +41,26 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
             console.error('Error updating ddd like:', error);
         }
     };
-    const toggleHeartColor = () => {
-        addLike(publicKey);
-        setIsLiked(!isLiked);
+
+    const removeLike = async (id) => {
+        try {
+            const response = await api.delete(`/markets/${id}/unlike`);
+            console.log('Remove like updated successfully:', response.data);
+        } catch (error) {
+            console.error('Error removing like:', error);
+        }
     };
+
+    const toggleHeartColor = () => {
+        if (isLiked) {
+            removeLike(publicKey);
+            setIsLiked(false);
+        } else {
+            addLike(publicKey);
+            setIsLiked(true);
+        }
+    };
+
     const handlePress = () => {
         upView(publicKey);
         navigation.navigate('DetailMarket', { publicKey });

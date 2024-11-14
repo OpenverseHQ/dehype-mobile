@@ -15,6 +15,8 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const [marketData, setMarketData] = useState<any[]>([]);
   const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [favourites, setFavourites] = useState([]);
+
 
 
   const fetchCategories = async () => {
@@ -32,7 +34,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       try {
         const response = await api.get('/search/details?fav=true');
         const markets = response.data;
-        console.log(response.data)
+        setFavourites(response.data.map(item => item.publicKey)); 
 
         const marketsWithStats = await Promise.all(
           markets.map(async (market: any) => {
@@ -137,6 +139,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                   participants={market.participants}
                   totalVolume={market.totalVolume}
                   marketStats={market.marketStats}
+                  favourites={favourites}
                 />
               ))}
             </ScrollView>
@@ -191,6 +194,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                     participants={market.participants}
                     totalVolume={market.totalVolume}
                     marketStats={market.marketStats}
+                    favourites={favourites}
                   />
                 ))}
               </ScrollView>
