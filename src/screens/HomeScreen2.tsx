@@ -7,6 +7,8 @@ import CardItemTrend from '../components/CardItemTrend';
 import CardItem from '../components/CardItem';
 import api from '../api/registerAccountApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAuthorization } from '../utils/useAuthorization';
+
 
 
 
@@ -16,8 +18,16 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [favourites, setFavourites] = useState([]);
+  const [selectedTab, setSelectedTab] = useState('All');
+  const { selectedAccount } = useAuthorization();
 
 
+  // useEffect(() => {
+  //   if (route.params?.screen) {
+  //     console.log(route.params.screen)
+  //     setSelectedTab(route.params.screen); 
+  //   }
+  // }, [route.params?.screen]);
 
   const fetchCategories = async () => {
     try {
@@ -34,7 +44,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       try {
         const response = await api.get('/search/details?fav=true');
         const markets = response.data;
-        setFavourites(response.data.map(item => item.publicKey)); 
+        setFavourites(response.data.map(item => item.publicKey));
 
         const marketsWithStats = await Promise.all(
           markets.map(async (market: any) => {
@@ -47,9 +57,15 @@ const HomeScreen2 = ({ navigation, route }: any) => {
         console.error('Lỗi khi lấy danh sách favorite market:', error);
       }
     };
-    const unsubscribe = navigation.addListener('focus', fetchMarketFavorite);
-    return unsubscribe;
-  }, []);
+
+    if (selectedAccount) {
+      const unsubscribe = navigation.addListener('focus', fetchMarketFavorite);
+      return unsubscribe;
+    } else {
+      setFavourites([]);
+    }
+  }, [navigation, selectedAccount]);
+
   useEffect(() => {
     fetchCategories();
   }, [navigation]);
@@ -81,7 +97,6 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     return marketData.filter((market: any) => market.category === category);
   };
 
-  const [selectedTab, setSelectedTab] = useState('All');
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -116,12 +131,14 @@ const HomeScreen2 = ({ navigation, route }: any) => {
           >
             <Text style={styles.tabText}>Newest</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'Favorite' && styles.activeTab]}
-            onPress={() => setSelectedTab('Favorite')}
-          >
-            <Text style={styles.tabText}>Favorite</Text>
-          </TouchableOpacity>
+          {selectedAccount && (
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 'Favorite' && styles.activeTab]}
+              onPress={() => setSelectedTab('Favorite')}
+            >
+              <Text style={styles.tabText}>Favorite</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.filter} onPress={() => navigation.navigate('Filter')}>
             <Icon name='filter-variant' size={20} />
           </TouchableOpacity>

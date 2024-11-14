@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import api from '../api/registerAccountApi';
+import { useAuthorization } from '../utils/useAuthorization';
+
 
 type RootStackParamList = {
     DetailMarket: { publicKey: string };
@@ -32,6 +34,8 @@ interface CardItems {
 const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats, favourites }) => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [isLiked, setIsLiked] = useState(favourites.includes(publicKey));
+    const { selectedAccount } = useAuthorization();
+
 
     const addLike = async (id) => {
         try {
@@ -52,6 +56,11 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
     };
 
     const toggleHeartColor = () => {
+        if (!selectedAccount) {
+            console.log("User is not logged in. Cannot like or unlike.");
+            return;
+        }
+
         if (isLiked) {
             removeLike(publicKey);
             setIsLiked(false);
@@ -60,6 +69,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
             setIsLiked(true);
         }
     };
+
 
     const handlePress = () => {
         upView(publicKey);

@@ -70,7 +70,6 @@ const UserSignedInScreen = ({ address, navigation }) => {
     const getQuantityFavorite = async () => {
       try {
         const response = await api.get('/search/details?fav=true');
-        console.log(response.data)
         setQuantity(response.data.length);
       } catch (error) {
         console.error('Lỗi khi lấy quantity:', error);
@@ -107,7 +106,9 @@ const UserSignedInScreen = ({ address, navigation }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.favorite} onPress={() => { navigation.navigate('Home') }}>
+        <TouchableOpacity style={styles.favorite} onPress={() => {
+          navigation.navigate('Home', { screen: 'Favorite' });
+        }}>
           <Icon name='heart-circle' size={40} color={'#777'} />
           <View style={styles.favoriteBadge}>
             <Text style={styles.favoriteBadgeText}>{quantity}</Text>
