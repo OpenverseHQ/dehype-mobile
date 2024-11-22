@@ -4,6 +4,7 @@ import api from '../api/registerAccountApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
+import { formatDistanceToNow, parseISO, parse } from 'date-fns';
 
 // Hoang Custom
 import { useAuthorization } from '../utils/useAuthorization';
@@ -279,6 +280,11 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     setReplyVisible(prev => ({ ...prev, [commentId]: false }));
     setReplyText(prev => ({ ...prev, [commentId]: '' }));
   };
+  const parseDate = (dateString) => {
+    // Cách xử lý chuỗi ngày giờ với định dạng 'HH:mm:ss, DD/MM/YYYY'
+    const dateFormat = 'HH:mm:ss, dd/MM/yyyy';  // Định dạng chuỗi cần phân tích
+    return parse(dateString, dateFormat, new Date());
+  };
 
   const handlePostReply = async (commentId: string) => {
     await handleGetAccess(selectedAccount.publicKey);
@@ -329,6 +335,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
 
   const renderItem = ({ item }: { item: Comment }) => {
+    const parsedTime = parseDate(item.createAt);
+    const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
     return (
       <View style={styles.commentItem}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -342,7 +350,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
             <Text style={styles.username}> {item.username.length < 10 ? item.username : item.username.substring(0, 10).concat("...")} </Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text style={styles.timeAgo}>{item.createAt}</Text>
+            <Text style={styles.timeAgo}>
+              {timeAgo} ago
+            </Text>
             {selectedAccount && selectedAccount.publicKey && item.walletAddress === selectedAccount.publicKey.toString() && (
               <Menu>
                 <MenuTrigger>
@@ -414,65 +424,70 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         )}
 
         {/* Hiển thị replies */}
-        {item.replies.map((reply) => (
-          <View key={reply.id} style={{ marginLeft: 20, marginTop: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {/* Kiểm tra avatarUrl của reply trước khi render Image */}
-                {reply.user.avatarUrl ? (
-                  <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
-                ) : (
-                  <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
-                )}
-                <Text style={styles.username}> {reply.user.username.length < 10 ? reply.user.username : reply.user.username.substring(0, 10).concat("...")} </Text>
-              </View>
+        {item.replies.map((reply) => {
+          const parsedReplyTime = parseDate(reply.createAt);
+          const timeReplyAgo = !isNaN(parsedReplyTime.getTime()) ? formatDistanceToNow(parsedReplyTime) : '';
+          return (
+
+            <View key={reply.id} style={{ marginLeft: 20, marginTop: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={styles.timeAgo}>{reply.createAt}</Text>
-                {selectedAccount && selectedAccount.publicKey && reply.user.walletAddress === selectedAccount.publicKey.toString() && (
-                  <Menu>
-                    <MenuTrigger>
-                      <Icon size={20} name="dots-horizontal" />
-                    </MenuTrigger>
-                    <MenuOptions>
-                      <MenuOption onSelect={() => handleEditPress(item.id, reply.comment, reply.id)}>
-                        <View style={styles.option}>
-                          <Icon name="update" size={20} />
-                          <Text style={styles.menuText}>Update</Text>
-                        </View>
-                      </MenuOption>
-                      <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
-                        <View style={styles.option}>
-                          <Icon name="delete" size={20} />
-                          <Text style={styles.menuText}>Delete</Text>
-                        </View>
-                      </MenuOption>
-                    </MenuOptions>
-                  </Menu>
-                )}
-              </View>
-            </View>
-            {/* Edit TextInput for reply */}
-            {editCommentId === item.id && editReplyId === reply.id ? (
-              <View style={{ marginLeft: 35 }}>
-                <TextInput
-                  style={styles.input}
-                  value={editCommentText}
-                  onChangeText={setEditCommentText}
-                />
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <TouchableOpacity onPress={() => setEditCommentId(null)}>
-                    <Text style={styles.cancelButton}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText, reply.id)}>
-                    <Text style={styles.postButtonTextRep}>Save</Text>
-                  </TouchableOpacity>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  {/* Kiểm tra avatarUrl của reply trước khi render Image */}
+                  {reply.user.avatarUrl ? (
+                    <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
+                  ) : (
+                    <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
+                  )}
+                  <Text style={styles.username}> {reply.user.username.length < 10 ? reply.user.username : reply.user.username.substring(0, 10).concat("...")} </Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={styles.timeAgo}>{timeReplyAgo} ago</Text>
+                  {selectedAccount && selectedAccount.publicKey && reply.user.walletAddress === selectedAccount.publicKey.toString() && (
+                    <Menu>
+                      <MenuTrigger>
+                        <Icon size={20} name="dots-horizontal" />
+                      </MenuTrigger>
+                      <MenuOptions>
+                        <MenuOption onSelect={() => handleEditPress(item.id, reply.comment, reply.id)}>
+                          <View style={styles.option}>
+                            <Icon name="update" size={20} />
+                            <Text style={styles.menuText}>Update</Text>
+                          </View>
+                        </MenuOption>
+                        <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
+                          <View style={styles.option}>
+                            <Icon name="delete" size={20} />
+                            <Text style={styles.menuText}>Delete</Text>
+                          </View>
+                        </MenuOption>
+                      </MenuOptions>
+                    </Menu>
+                  )}
                 </View>
               </View>
-            ) : (
-              <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
-            )}
-          </View>
-        ))}
+              {/* Edit TextInput for reply */}
+              {editCommentId === item.id && editReplyId === reply.id ? (
+                <View style={{ marginLeft: 35 }}>
+                  <TextInput
+                    style={styles.input}
+                    value={editCommentText}
+                    onChangeText={setEditCommentText}
+                  />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <TouchableOpacity onPress={() => setEditCommentId(null)}>
+                      <Text style={styles.cancelButton}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleUpdateComment(item.id, editCommentText, reply.id)}>
+                      <Text style={styles.postButtonTextRep}>Save</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <Text style={{ marginLeft: 35 }}>{reply.comment}</Text>
+              )}
+            </View>
+          );
+        })}
       </View>
     );
   }
