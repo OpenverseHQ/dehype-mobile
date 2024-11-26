@@ -7,6 +7,9 @@ import Marquee from 'react-native-marquee';
 import BettingHistory from '../components/BettingHistory';
 import { htmlToText } from 'html-to-text';
 
+import GeminiAIButton from '../components/GeminiAIButton';
+import ChartScreen from './ChartScreen';
+
 interface DetailMarketScreenProps {
   route: {
     params: {
@@ -142,6 +145,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
         <>
           {/* Phần biểu đồ */}
          {/* <Chart/> */}
+         <ChartScreen/>
+         <GeminiAIButton/>
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
             <Text style={styles.aboutTitle}>About Market</Text>

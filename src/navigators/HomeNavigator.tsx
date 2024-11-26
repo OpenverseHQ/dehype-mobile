@@ -27,6 +27,7 @@ import DetailMarketScreen from "../screens/DetailMarketScreen";
 import SolanaLoginScreen from "../screens/SolanaLoginScreen";
 import UploadImageScreen from "../screens/UploadImageScreen";
 import ChartScreen from "../screens/ChartScreen";
+import GeminiChatScreen from "../screens/GeminiChatScreen";
 
 const Stack = createNativeStackNavigator();
 const UserStack = () => (
@@ -120,6 +121,7 @@ function MyTabs() {
       <Tab2.Screen name="User" component={UserStack} />
       {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */} 
       <Tab2.Screen name="Chart" component ={ChartScreen} />
+      <Tab2.Screen name="Gemini" component ={GeminiChatScreen} />
     </Tab2.Navigator>
   );
 }
