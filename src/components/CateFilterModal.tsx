@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Icon } from 'react-native-vector-icons/Icon';
-
+import api from '../api/registerAccountApi';
 type Category = string;
 type Status = string;
 type Currency = string;
@@ -15,32 +14,51 @@ const CateFilterModal = ({
     onClose: () => void;
     typeFilter: string;
 }) => {
-    const categories: Category[][] =
-        typeFilter === 'Category'
-            ? [
-                ['Politics', 'Crypto'],
-                ['Solana', 'Technology'],
-                ['Science', 'News'],
-                ['Sports', 'Entertainment'],
-                ['Finance'],
-            ]
-            : typeFilter === 'Status'
-                ? [
-                    ['Proposed', 'Active'],
-                    ['Closed', 'Resolved'],
-                    ['Reported', 'Disputed'],
-                ]
-                : typeFilter === 'Currency'
-                    ? [
-                        ['ZTG', 'EUR'],
-                        ['SOL', 'USDCS'],
-                    ]
-                    : [];
-
+    const [categories, setCategories] = useState<Category[][]>([]);
     const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
     const [selectedStatus, setSelectedStatus] = useState<Status[]>([]);
     const [selectedCurrency, setSelectedCurrency] = useState<Currency[]>([]);
 
+    const fetchCategories = async () => {
+        try {
+            const response = await api.get('/category');
+            const categoryData = response.data;
+
+            if (Array.isArray(categoryData)) {
+                const groupedCategories: Category[][] = [];
+                const groupSize = 2; // Số danh mục trên mỗi hàng
+
+                for (let i = 0; i < categoryData.length; i += groupSize) {
+                    const group = categoryData.slice(i, i + groupSize).map(item => item.name);
+                    groupedCategories.push(group);
+                }
+
+                setCategories(groupedCategories); // Lưu vào state
+            } else {
+                console.error('API không trả về đúng định dạng mảng:', categoryData);
+            }
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách category:', error);
+        }
+    };
+
+
+    useEffect(() => {
+        if (typeFilter === 'Category') {
+            fetchCategories();
+        } else if (typeFilter === 'Status') {
+            setCategories([
+                ['Proposed', 'Active'],
+                ['Closed', 'Resolved'],
+                ['Reported', 'Disputed'],
+            ]);
+        } else if (typeFilter === 'Currency') {
+            setCategories([
+                ['ZTG', 'EUR'],
+                ['SOL', 'USDCS'],
+            ]);
+        }
+    }, [typeFilter]);
     const toggleSelection = (item: string) => {
         if (typeFilter === 'Category') {
             if (selectedCategories.includes(item)) {

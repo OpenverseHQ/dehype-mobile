@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CateFilterModal from '../components/CateFilterModal';
-import { Dropdown } from 'react-native-element-dropdown';
-
+import api from '../api/registerAccountApi';
 
 type Category = string;
 type Status = string;
@@ -13,27 +12,36 @@ const FilterScreen = ({ navigation }: any) => {
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<Status[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency[]>([]);
-
+  const [favourites, setfavourites] = useState(false);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
   const [isStatusModalVisible, setStatusModalVisible] = useState(false);
   const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
 
   const [sortOption, setSortOption] = useState('Newest');
 
   // Hàm để thêm category mới mà không xóa những cái đã chọn trước đó
-  const handleApply = (categories: string[], status?: string[], currency?: string[]) => {
+  const handleApply = (categories: { id: string; name: string }[], status?: string[], currency?: string[]) => {
     if (categories) {
       setSelectedCategories(prevCategories => {
-        const updatedCategories = new Set([...prevCategories, ...categories]);
+        // Chỉ lưu trữ ID thay vì toàn bộ đối tượng hoặc tên
+        const updatedCategories = new Set([
+          ...prevCategories,
+          ...categories.map((category) => category.id), // Chỉ lưu ID của categories
+        ]);
         return Array.from(updatedCategories);
       });
     }
+
     if (status) {
       setSelectedStatus(prevStatus => {
         const updatedStatus = new Set([...prevStatus, ...status]);
         return Array.from(updatedStatus);
       });
     }
+
     if (currency) {
       setSelectedCurrency(prevCurrency => {
         const updatedCurrency = new Set([...prevCurrency, ...currency]);
@@ -41,6 +49,26 @@ const FilterScreen = ({ navigation }: any) => {
       });
     }
   };
+
+  const fetchFilteredMarkets = async () => {
+    try {
+      // Chuyển các danh mục đã chọn thành chuỗi phân cách bằng dấu phẩy
+      const categoryQuery = selectedCategories.join(','); // Ví dụ: '1,2,5'
+
+      // Tạo query string
+      const queryParams = `c=${categoryQuery}&fav=${favourites}`;
+
+      // Gửi yêu cầu API
+      const response = await api.get(`/search/details?${queryParams}`);
+
+      // Trả về dữ liệu
+      return response.data;
+    } catch (error) {
+      console.error('Lỗi khi fetch dữ liệu từ API:', error);
+      return [];
+    }
+  };
+
 
   const toggleCategoryModal = () => {
     setCategoryModalVisible(!isCategoryModalVisible);
@@ -155,37 +183,32 @@ const FilterScreen = ({ navigation }: any) => {
         <Icon name="chevron-down-outline" size={20} />
       </TouchableOpacity>
 
-      <View style={styles.checkboxContainer}>
-        {/* Tùy chọn Liquidity */}
-        {/* <Text style={styles.checkboxLabel}>Liquidity only</Text> */}
+      <View style={styles.filterContainer}>
+        <Text>Favourite</Text>
+        <Switch value={favourites} onValueChange={setfavourites} />
       </View>
 
       <TouchableOpacity
         style={styles.showMarketsButton}
-        onPress={() => {
-          const marketData = require('../data.json');
+        onPress={async () => {
+          setLoading(true); // Bắt đầu trạng thái loading
+          setError(null);  // Reset lỗi
 
-          console.log("Selected:", [...selectedCategories, ...selectedStatus, ...selectedCurrency]);
+          try {
+            const filteredMarkets = await fetchFilteredMarkets();
 
-          const filteredMarkets = marketData.markets.filter((market: any) => {
-            const isCategoryMatch = selectedCategories.length ? selectedCategories.includes(market.category) : false;
-            const isStatusMatch = selectedStatus.length ? selectedStatus.includes(market.status) : false;
-            const isCurrencyMatch = selectedCurrency.length ? selectedCurrency.includes(market.coin) : false;
-            return isCategoryMatch || isStatusMatch || isCurrencyMatch;
-          });
-
-          const sortedMarkets = filteredMarkets.sort((a: any, b: any) => {
-            const dateA = new Date(a.start_date); // chuyển đổi sang đối tượng Date
-            const dateB = new Date(b.start_date);
-
-            // Sắp xếp theo order được chọn
-            return sortOption === 'Newest' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
-          });
-          navigation.navigate('FilterResult', { filteredMarkets: sortedMarkets });
+            // Điều hướng sang màn hình kết quả cùng dữ liệu đã lọc
+            navigation.navigate('FilterResult', { filteredMarkets });
+          } catch (error) {
+            setError('Có lỗi xảy ra khi lấy dữ liệu từ API.');
+          } finally {
+            setLoading(false); // Kết thúc trạng thái loading
+          }
         }}
       >
         <Text style={styles.buttonText}>Show Markets</Text>
       </TouchableOpacity>
+
     </View>
   );
 };
@@ -227,6 +250,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 10,
   },
   filterOption: {
     flexDirection: 'row',

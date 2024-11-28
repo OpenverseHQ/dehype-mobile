@@ -81,7 +81,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                         ))}
                     </View>
                 )}
-            </View>
+            </View> 
 
             {/* Danh sách FlatList */}
             <FlatList
