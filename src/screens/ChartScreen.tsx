@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 import api from "../api/registerAccountApi";
-// import EventSource from 'eventsource'
-const EventSource = require('rn-eventsource');
+import EventSource, { EventSourceListener } from "react-native-sse";
 
 interface ChartMarketScreenProps {
   idMarket: string;
@@ -13,55 +12,34 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   const [ptData, setPtData] = useState<{ value: number; date: string }[]>([]);
   const [ptData2, setPtData2] = useState<{ value: number; date: string }[]>([]);
 
-
   useEffect(() => {
-    // const url = 'https://dehype.api.openverse.tech/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/live-updates';
-    const url = '';
-    const es = new EventSource(url);
-    es.onopen = () => {
-      console.log('SSE connection opened.');
+    const es = new EventSource(
+      "https://dehype.api.openverse.tech/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/live-updates",
+      {
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      }
+    );
+
+    const listener: EventSourceListener = async (event) => {
+      if (event?.type === "open") {
+        console.log("Open SSE connection.");
+      } else if (event?.type === "message") {
+        const data = JSON.parse(event.data);
+        console.log("Received message:", data.stats[0].data);
+      } else if (event?.type === "error") {
+        console.error("Connection error:", event.message);
+      } else if (event?.type === "exception") {
+        console.error("Error:", event.message, event.error);
+      }
     };
-
-    es.onmessage = (event) => {
-      console.log('Received event:', event.data);
-    };
-
-    es.onerror = (error) => {
-      console.error('Error:', error);
-    };
-    // es.addEventListener("open", () => {
-    //   console.log("SSE connection opened successfully.");
-    // });
-
-    // es.addEventListener("message", (event) => {
-    //   try {
-    //     console.log("Raw SSE event:", event);
-    //     const stat = JSON.parse(event.data);
-
-    //     console.log("Received stat:", stat); 
-
-    //     const yesValue = parseFloat(stat.data.find((d: any) => d.name === "Yes")?.percentage || "0");
-    //     const noValue = parseFloat(stat.data.find((d: any) => d.name === "No")?.percentage || "0");
-    //     const date = new Date(stat.timestamp).toLocaleDateString("en-GB", {
-    //       day: "numeric",
-    //       month: "short",
-    //       year: "numeric",
-    //     });
-
-    //     setPtData((prev) => [...prev, { value: yesValue, date }].slice(-20));
-    //     setPtData2((prev) => [...prev, { value: noValue, date }].slice(-20));
-    //   } catch (error) {
-    //     console.error("Error parsing SSE data:", error);
-    //   }
-    // });
-
-    // es.addEventListener("error", (error) => {
-    //   console.error("SSE connection error:", error);
-    //   es.close();
-    // });
+    es.addEventListener("open", listener);
+    es.addEventListener("message", listener);
+    es.addEventListener("error", listener);
 
     return () => {
-      console.log("Closing SSE connection...");
+      es.removeAllEventListeners();
       es.close();
     };
   }, [idMarket]);
