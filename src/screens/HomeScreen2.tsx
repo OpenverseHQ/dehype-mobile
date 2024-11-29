@@ -38,33 +38,32 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     }
   };
 
+  // useEffect(() => {
+  //   const fetchMarketFavorite = async () => {
+  //     try {
+  //       const response = await api.get('/search/details?fav=true');
+  //       const markets = response.data;
+  //       setFavourites(response.data.map(item => item.publicKey));
 
-  useEffect(() => {
-    const fetchMarketFavorite = async () => {
-      try {
-        const response = await api.get('/search/details?fav=true');
-        const markets = response.data;
-        setFavourites(response.data.map(item => item.publicKey));
+  //       const marketsWithStats = await Promise.all(
+  //         markets.map(async (market: any) => {
+  //           const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
+  //           return { ...market, marketStats: statsResponse.data };
+  //         })
+  //       );
+  //       setMarketFavoriteData(marketsWithStats);
+  //     } catch (error) {
+  //       console.error('Lỗi khi lấy danh sách favorite market:', error);
+  //     }
+  //   };
 
-        const marketsWithStats = await Promise.all(
-          markets.map(async (market: any) => {
-            const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-            return { ...market, marketStats: statsResponse.data };
-          })
-        );
-        setMarketFavoriteData(marketsWithStats);
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách favorite market:', error);
-      }
-    };
-
-    if (selectedAccount) {
-      const unsubscribe = navigation.addListener('focus', fetchMarketFavorite);
-      return unsubscribe;
-    } else {
-      setFavourites([]);
-    }
-  }, [navigation, selectedAccount]);
+  //   if (selectedAccount) {
+  //     const unsubscribe = navigation.addListener('focus', fetchMarketFavorite);
+  //     return unsubscribe;
+  //   } else {
+  //     setFavourites([]);
+  //   }
+  // }, [navigation, selectedAccount]);
 
   useEffect(() => {
     fetchCategories();
