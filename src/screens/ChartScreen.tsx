@@ -12,35 +12,27 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   const [ptData, setPtData] = useState<{ value: number; date: string }[]>([]);
   const [ptData2, setPtData2] = useState<{ value: number; date: string }[]>([]);
 
+  const fetchData = async (isFirstTimeConnect = false) => {
+    try {
+      const url = isFirstTimeConnect
+        ? "http://192.168.1.7:8080/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/stats-updates?init=true"
+        : "http://192.168.1.7:8080/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/stats-updates?init=false";
+
+      console.log(isFirstTimeConnect ? "First time connect" : "Polling data");
+      const response = await fetch(url);
+      const result = await response.json();
+      console.log("Data fetched:", result[0].data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   useEffect(() => {
-    const es = new EventSource(
-      "https://dehype.api.openverse.tech/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/live-updates",
-      {
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      }
-    );
-
-    const listener: EventSourceListener = async (event) => {
-      if (event?.type === "open") {
-        console.log("Open SSE connection.");
-      } else if (event?.type === "message") {
-        const data = JSON.parse(event.data);
-        console.log("Received message:", data.stats[0].data);
-      } else if (event?.type === "error") {
-        console.error("Connection error:", event.message);
-      } else if (event?.type === "exception") {
-        console.error("Error:", event.message, event.error);
-      }
-    };
-    es.addEventListener("open", listener);
-    es.addEventListener("message", listener);
-    es.addEventListener("error", listener);
-
+    fetchData(true);
+    const interval = setInterval(fetchData, 1000 * 20); // Poll every 20 seconds
     return () => {
-      es.removeAllEventListeners();
-      es.close();
+      console.log("Clearing interval");
+      clearInterval(interval);
     };
   }, [idMarket]);
 
