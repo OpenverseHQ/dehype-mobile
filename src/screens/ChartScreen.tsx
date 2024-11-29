@@ -78,9 +78,28 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   
 
 
+  const fetchData = async (isFirstTimeConnect = false) => {
+    try {
+      const url = isFirstTimeConnect
+        ? "http://192.168.1.7:8080/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/stats-updates?init=true"
+        : "http://192.168.1.7:8080/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/stats-updates?init=false";
+
+      console.log(isFirstTimeConnect ? "First time connect" : "Polling data");
+      const response = await fetch(url);
+      const result = await response.json();
+      console.log("Data fetched:", result[0].data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   useEffect(() => {
     fetchData(true);
+<<<<<<< HEAD
     const interval = setInterval(fetchData, 1000 * 20);
+=======
+    const interval = setInterval(fetchData, 1000 * 20); // Poll every 20 seconds
+>>>>>>> 785ca504022330d64300430e02c2cfcc88939ebd
     return () => {
       console.log("Clearing interval");
       clearInterval(interval);
