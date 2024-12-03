@@ -1,0 +1,133 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+/* my CSS  */
+
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+
+
+.category-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  width: 200px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.category-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+h2 {
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+
+
+
+.create-category {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  width: 300px;
+  margin: 20px auto;
+}
+
+.create-category input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.create-category button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.create-category button:hover {
+  background-color: #0056b3;
+}
+
+
+
+
+
+
+/* App.css */
+
+.category-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+.my-card{
+  background-color: #131b24;
+  color:#f9f9f9;
+}
+#BG{
+  background-color:  #1c2936;
+  width: 100%;
+  height: 100%;
+  margin: 0; /* Loại bỏ khoảng cách mặc định */
+  padding: 0; /* Loại bỏ padding mặc định */
+}
+
+.my-title {
+  color:white;
+}
+
