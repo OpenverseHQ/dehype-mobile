@@ -6,9 +6,9 @@ const GeminiAIButton = () => {
   const { callGeminiAPI, loading, error, responseData } = useGeminiAPI();
   const [inputText, setInputText] = useState("Recommed user what deal to buy: Market name : Will SOL reached 1000$ at the end of this year?Today Percent : yes: 70% , No: 30% ; Yesterday Percent: yes: 80% , No: 20%");
 
-  useEffect(() => {
-    setInputText("Tóm tắt bài báo sau: https://dantri.com.vn/the-gioi/vu-khi-hoan-toan-moi-cua-nga-khien-ukraine-bat-an-20241126093832067.htm");
-  }, []); 
+  // useEffect(() => {
+  //   setInputText("Tóm tắt bài báo sau: https://dantri.com.vn/the-gioi/vu-khi-hoan-toan-moi-cua-nga-khien-ukraine-bat-an-20241126093832067.htm");
+  // }, []); 
 
 
   const handleGenerateContent = async () => {

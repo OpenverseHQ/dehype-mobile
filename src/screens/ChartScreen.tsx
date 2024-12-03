@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Dimensions, Switch, Alert, StyleSheet } from "react-native";
+import { View, Text, Dimensions, Switch, Alert, StyleSheet, ScrollView } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
-import api from "../api/registerAccountApi";
-import EventSource, { EventSourceListener } from "react-native-sse";
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from "react-native-popup-menu";
 
@@ -14,11 +12,8 @@ interface ChartMarketScreenProps {
 }
 
 const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
-  const [ptData, setPtData] = useState<{ value: number; date: string }[]>([]);
-  const [ptData2, setPtData2] = useState<{ value: number; date: string }[]>([]);
   const [chartData, setChartData] = useState<{ [key: string]: { value: number; date: string }[] }>({});
-
-
+  const [visibleKeys, setVisibleKeys] = useState<{ [key: string]: boolean }>({});
   const [grid, setGrid] = useState(false);
   const [color, setColor] = useState(false);
 
@@ -28,89 +23,96 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
       const url = isFirstTimeConnect
         ? `https://dehype.api.openverse.tech/api/v1/markets/${idMarket}/stats-updates?init=true`
         : `https://dehype.api.openverse.tech/api/v1/markets/${idMarket}/stats-updates?init=false`;
-  
-      console.log(isFirstTimeConnect ? "First time connect" : "Polling data");
-  
+
+      // console.log(isFirstTimeConnect ? "First time connect" : "Polling data");
+
       const response = await fetch(url);
-  
+
       if (!response.ok) {
         console.error(`Error: ${response.status} - ${response.statusText}`);
         return;
       }
-  
+
       const result = await response.json();
-      console.log("Data fetched:", result);
-  
+      // console.log("Data fetched:", result);
+
       // Create a new chartData object by merging old and new data
       setChartData((prevChartData) => {
         const updatedChartData = { ...prevChartData };
-  
+
         result.forEach((item: any) => {
-          const timestamp = new Date(item.timestamp).toLocaleTimeString();
-  
+
+          const timestamp = new Date(item.timestamp).toLocaleString("vi-VN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          });
+
           item.data.forEach((entry: any) => {
             const name = entry.name;
             const value = parseFloat(entry.percentage);
-  
+
             // Initialize array for new choice if not exist
             if (!updatedChartData[name]) {
               updatedChartData[name] = [];
             }
-  
+
             // Avoid duplicate entries by comparing timestamps
             if (!updatedChartData[name].some((data) => data.date === timestamp)) {
               updatedChartData[name].push({ value, date: timestamp });
             }
-  
+
             // Keep only the last 100 entries
-            if (updatedChartData[name].length > 100) {
-              updatedChartData[name].shift();  // Remove the oldest entry if there are more than 100
-            }
+            // if (updatedChartData[name].length > 100) {
+            //   updatedChartData[name].shift();  // Remove the oldest entry if there are more than 100
+            // }
           });
         });
-  
         return updatedChartData;
       });
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-  
 
 
-  const fetchData = async (isFirstTimeConnect = false) => {
-    try {
-      const url = isFirstTimeConnect
-        ? "http://192.168.1.7:8080/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/stats-updates?init=true"
-        : "http://192.168.1.7:8080/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/stats-updates?init=false";
-
-      console.log(isFirstTimeConnect ? "First time connect" : "Polling data");
-      const response = await fetch(url);
-      const result = await response.json();
-      console.log("Data fetched:", result[0].data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
 
   useEffect(() => {
     fetchData(true);
-<<<<<<< HEAD
     const interval = setInterval(fetchData, 1000 * 20);
-=======
-    const interval = setInterval(fetchData, 1000 * 20); // Poll every 20 seconds
->>>>>>> 785ca504022330d64300430e02c2cfcc88939ebd
     return () => {
       console.log("Clearing interval");
       clearInterval(interval);
     };
   }, [idMarket]);
 
-  const series = Object.keys(chartData).map((key, value) => ({
-    label: key, // Nhãn dòng, ví dụ: "Yes", "No"
-    data: value, // Dữ liệu dòng
-    color: key === "No" ? "red" : key === "Yes" ? "green" : "blue",
-  }));
+
+  useEffect(() => {
+    setVisibleKeys((prevVisibleKeys) => {
+      const updatedKeys = { ...prevVisibleKeys };
+      Object.keys(chartData).forEach((key) => {
+        if (!(key in updatedKeys)) {
+          updatedKeys[key] = true;
+        }
+      });
+      return updatedKeys;
+    });
+  }, [chartData]);
+
+  const toggleKeyVisibility = (key: string) => {
+    setVisibleKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const filteredChartData = Object.keys(chartData)
+    .filter((key) => visibleKeys[key])
+    .reduce((acc, key) => {
+      acc[key] = chartData[key];
+      return acc;
+    }, {});
+
   // const firstKey = Object.keys(chartData)[0]; // Lấy key đầu tiên
   // const firstValue = chartData[firstKey]; // Lấy giá trị của key đầu tiên
 
@@ -123,13 +125,12 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
           backgroundColor: "#fff",
         }}
       >
-
         <LineChart
           areaChart
-          data={chartData[Object.keys(chartData)[0]]}
-          data2={chartData[Object.keys(chartData)[1]]}
-          data3={chartData[Object.keys(chartData)[2]]}
-          data4={chartData[Object.keys(chartData)[3]]}
+          data={filteredChartData[Object.keys(filteredChartData)[0]]}
+          data2={filteredChartData[Object.keys(filteredChartData)[1]]}
+          data3={filteredChartData[Object.keys(filteredChartData)[2]]}
+          data4={filteredChartData[Object.keys(filteredChartData)[3]]}
           color1="red"
           color2="green"
           rotateLabel
@@ -139,7 +140,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
           thickness={2}
           startFillColor2="rgba(20,105,81,0.3)"
           endFillColor2="rgba(20,85,81,0.01)"
-          startFillColor="rgba(255, 0, 0, 0.3)"  
+          startFillColor="rgba(255, 0, 0, 0.3)"
           endFillColor="rgba(255, 0, 0, 0.01)"
           startOpacity={color ? 0.7 : 0}
           endOpacity={color ? 0.2 : 0}
@@ -166,44 +167,55 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
               return (
                 <View
                   style={{
-                    height: 90,
-                    width: 100,
+                    flexDirection: "column",
                     justifyContent: "center",
-                    marginTop: -20,
+                    alignItems: "center",
+                    marginTop: -10,
                     marginLeft: -40,
                   }}
                 >
-                  <Text
-                    style={{
-                      color: "black",
-                      fontSize: 14,
-                      marginBottom: 6,
-                      textAlign: "center",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {items[0].date}
-                  </Text>
-
-                  <View
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 6,
-                      borderRadius: 16,
-                      backgroundColor: "gray",
-                    }}
-                  >
-                    <Text
+                  {items.map((item, index) => (
+                    <View
+                      key={index}
                       style={{
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        color: "white",
+                        height: 90,
+                        width: 100,
+                        justifyContent: "center",
+                        marginBottom: 6,
                       }}
                     >
-                      {items[0].value + "%   "}
-                      {items[1].value + "%"}
-                    </Text>
-                  </View>
+                      <Text
+                        style={{
+                          color: "black",
+                          fontSize: 10,
+                          marginBottom: 6,
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {item.date}
+                      </Text>
+                      <View
+                        style={{
+                          paddingHorizontal: 1,
+                          paddingVertical: 6,
+                          borderRadius: 16,
+                          backgroundColor: index % 2 === 0 ? "red" : "green",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            color: "white",
+                            fontSize:10
+                          }}
+                        >
+                          {item.value + "%"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
                 </View>
               );
             },
@@ -211,21 +223,25 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
 
         />
 
+
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: 10 }}>
           <Menu style={{ marginRight: 10 }}>
             <MenuTrigger>
               <Icon size={18} name="options-outline" />
             </MenuTrigger>
             <MenuOptions customStyles={{ optionsContainer: styles.menu }}>
-              <MenuOption style={styles.menuOption} onSelect={() => Alert.alert("Setting 1 toggled")}>
-                <Text style={styles.menuOptionText}>Yes</Text>
-                <Switch value={grid} onValueChange={() => setGrid(prev => !prev)} />
-              </MenuOption>
-              <MenuOption style={styles.menuOption} onSelect={() => Alert.alert("Setting 2 toggled")}>
-                <Text style={styles.menuOptionText}>No</Text>
-                <Switch value={color} onValueChange={() => setColor(prev => !prev)} />
-              </MenuOption>
+              {Object.keys(chartData).map((key, index) => (
+                <MenuOption
+                  key={index}
+                  style={styles.menuOption}
+                  onSelect={() => Alert.alert(`Selected: ${key}`)} // Thay đổi hành động nếu cần
+                >
+                  <Text style={styles.menuOptionText}>{key}</Text>
+                  <Switch value={visibleKeys[key] ?? true} onValueChange={() => toggleKeyVisibility(key)} />
+                </MenuOption>
+              ))}
             </MenuOptions>
+
           </Menu>
 
           {/* Menu for Settings */}
