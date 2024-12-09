@@ -4,7 +4,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import CateFilterModal from '../components/CateFilterModal';
 import api from '../api/registerAccountApi';
 
-type Category = string;
+type Category = {
+  id: string;
+  name: string;
+  coverUrl: string;
+};
 type Status = string;
 type Currency = string;
 
@@ -22,16 +26,14 @@ const FilterScreen = ({ navigation }: any) => {
 
   const [sortOption, setSortOption] = useState('Newest');
 
-  // Hàm để thêm category mới mà không xóa những cái đã chọn trước đó
-  const handleApply = (categories: { id: string; name: string }[], status?: string[], currency?: string[]) => {
+  const handleApply = (categories?: Category[], status?: string[], currency?: string[]) => {
     if (categories) {
       setSelectedCategories(prevCategories => {
-        // Chỉ lưu trữ ID thay vì toàn bộ đối tượng hoặc tên
-        const updatedCategories = new Set([
+        const updatedCategories = [
           ...prevCategories,
-          ...categories.map((category) => category.id), // Chỉ lưu ID của categories
-        ]);
-        return Array.from(updatedCategories);
+          ...categories.filter(category => !prevCategories.some(prev => prev.id === category.id)),
+        ];
+        return updatedCategories;
       });
     }
 
@@ -52,17 +54,21 @@ const FilterScreen = ({ navigation }: any) => {
 
   const fetchFilteredMarkets = async () => {
     try {
-      // Chuyển các danh mục đã chọn thành chuỗi phân cách bằng dấu phẩy
-      const categoryQuery = selectedCategories.join(','); // Ví dụ: '1,2,5'
-
-      // Tạo query string
-      const queryParams = `c=${categoryQuery}&fav=${favourites}`;
-
-      // Gửi yêu cầu API
+      console.log(selectedCategories.map(category => category.id));
+      const categoryQuery = selectedCategories.map(category => category.id).join(',');
+      // const queryParams = `c=${categoryQuery}&fav=${favourites}`;
+      const queryParams = `c=${categoryQuery}`;
+      
       const response = await api.get(`/search/details?${queryParams}`);
+      const markets = response.data;
 
-      // Trả về dữ liệu
-      return response.data;
+      const marketsWithStats = await Promise.all(
+        markets.map(async (market: any) => {
+          const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
+          return { ...market, marketStats: statsResponse.data };
+        })
+      );
+      return marketsWithStats;
     } catch (error) {
       console.error('Lỗi khi fetch dữ liệu từ API:', error);
       return [];
@@ -87,7 +93,7 @@ const FilterScreen = ({ navigation }: any) => {
   };
 
   const removeCategory = (categoryToRemove: string) => {
-    setSelectedCategories(selectedCategories.filter(category => category !== categoryToRemove));
+    setSelectedCategories(selectedCategories.filter(category => category.id !== categoryToRemove));
   };
 
   const removeStatus = (statusToRemove: string) => {
@@ -119,29 +125,35 @@ const FilterScreen = ({ navigation }: any) => {
 
       {/* Hiển thị danh sách các category đã chọn */}
       <View style={styles.selectedCategoriesContainer}>
-        {selectedCategories.length > 0 || selectedStatus.length > 0 || selectedCurrency.length > 0 ? (
-          // Kết hợp ba mảng vào một mảng duy nhất
-          [...selectedCategories, ...selectedStatus, ...selectedCurrency].map((item, index) => (
-            <View key={index} style={styles.categoryButton}>
-              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => {
-                // Xử lý xóa theo loại
-                if (selectedCategories.includes(item)) {
-                  removeCategory(item);
-                } else if (selectedStatus.includes(item)) {
-                  removeStatus(item);
-                } else if (selectedCurrency.includes(item)) {
-                  removeCurrency(item);
-                }
-              }}>
-                <Text style={styles.categoryButtonText}>{item}</Text>
-                <Icon name="close-outline" size={16} color="black" />
-              </TouchableOpacity>
-            </View>
-          ))
-        ) : (
-          <Text style={{ color: '#FF8C00' }}>No categories, status, or currency selected</Text>
-        )}
+        {
+          [...selectedCategories, ...selectedStatus, ...selectedCurrency].length > 0 ? (
+            [...selectedCategories, ...selectedStatus, ...selectedCurrency].map((item, index) => (
+              <View key={index} style={styles.categoryButton}>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
+                  onPress={() => {
+                    if (typeof item === 'object' && 'id' in item) {
+                      removeCategory(item.id);
+                    } else if (selectedStatus.includes(item.toString())) {
+                      removeStatus(item.toString());
+                    } else if (selectedCurrency.includes(item.toString())) {
+                      removeCurrency(item.toString());
+                    }
+                  }}
+                >
+                  <Text style={styles.categoryButtonText}>
+                    {typeof item === 'object' && 'name' in item ? item.name : item}
+                  </Text>
+                  <Icon name="close-outline" size={16} color="black" />
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <Text style={{ color: '#FF8C00' }}>No categories, status, or currency selected</Text>
+          )
+        }
       </View>
+
 
 
       {/* Nút mở modal cho Category */}
@@ -191,13 +203,11 @@ const FilterScreen = ({ navigation }: any) => {
       <TouchableOpacity
         style={styles.showMarketsButton}
         onPress={async () => {
-          setLoading(true); // Bắt đầu trạng thái loading
-          setError(null);  // Reset lỗi
+          setLoading(true); 
+          setError(null); 
 
           try {
             const filteredMarkets = await fetchFilteredMarkets();
-
-            // Điều hướng sang màn hình kết quả cùng dữ liệu đã lọc
             navigation.navigate('FilterResult', { filteredMarkets });
           } catch (error) {
             setError('Có lỗi xảy ra khi lấy dữ liệu từ API.');
@@ -299,7 +309,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#d8e2ed'
   },
   categoryButtonText: {
-    color: 'ccc',
+    color: '#000',
     fontSize: 12,
   },
 });

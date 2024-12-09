@@ -33,20 +33,20 @@ const FilterResultScreen: React.FC<FilterResultScreenProps> = ({ route, navigati
                 style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', margin: 10, width: '90%' }}
                 onPress={() => navigation.navigate('Filter')}
             >
-                <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Kết quả lọc</Text>
+                <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Filter results</Text>
                 <Icon name='filter-variant' size={20} />
             </TouchableOpacity>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{marginLeft:10}}>
                 {filteredMarkets.map((market, index) => (
                     <CardItem
                         key={index}
-                        nameMarket={market.name}
-                        outcome='Yes'
-                        percent={Math.floor(Math.random() * 50) + 50}
-                        cate={market.category}
-                        traders={market.traders}
-                        volume={market.volume}
-                        liquidity={market.liquidity}
+                        publicKey={market.publicKey}
+                        title={market.title}
+                        coverUrl={market.coverUrl}
+                        participants={market.participants}
+                        totalVolume={market.totalVolume}
+                        marketStats={market.marketStats}
+                        favourites={market.favourites}
                     />
                 ))}
             </ScrollView>

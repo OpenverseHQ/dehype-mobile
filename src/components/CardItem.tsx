@@ -33,7 +33,7 @@ interface CardItems {
 
 const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats, favourites }) => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-    const [isLiked, setIsLiked] = useState(favourites.includes(publicKey));
+    const [isLiked, setIsLiked] = useState(favourites && favourites.includes(publicKey) ? true : false);
     const { selectedAccount } = useAuthorization();
 
 
@@ -42,7 +42,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
             const response = await api.post(`/markets/${id}/like`);
             console.log('Add like updated successfully:', response.data);
         } catch (error) {
-            console.error('Error updating ddd like:', error);
+            console.error('Error updating like:', error);
         }
     };
 
@@ -56,6 +56,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
     };
 
     const toggleHeartColor = () => {
+        console.log(selectedAccount)
         if (!selectedAccount) {
             console.log("User is not logged in. Cannot like or unlike.");
             return;

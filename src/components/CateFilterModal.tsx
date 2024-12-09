@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import api from '../api/registerAccountApi';
-type Category = string;
+type Category = {
+    id: string;
+    name: string;
+    coverUrl: string;
+};
 type Status = string;
 type Currency = string;
 
@@ -10,7 +14,7 @@ const CateFilterModal = ({
     onClose,
     typeFilter,
 }: {
-    onApply: (categories: Category[], status?: Status[], currency?: Currency[]) => void;
+    onApply: (categories?: Category[], status?: Status[], currency?: Currency[]) => void;
     onClose: () => void;
     typeFilter: string;
 }) => {
@@ -29,7 +33,7 @@ const CateFilterModal = ({
                 const groupSize = 2; // Số danh mục trên mỗi hàng
 
                 for (let i = 0; i < categoryData.length; i += groupSize) {
-                    const group = categoryData.slice(i, i + groupSize).map(item => item.name);
+                    const group = categoryData.slice(i, i + groupSize);
                     groupedCategories.push(group);
                 }
 
@@ -43,23 +47,20 @@ const CateFilterModal = ({
     };
 
 
+
     useEffect(() => {
         if (typeFilter === 'Category') {
             fetchCategories();
         } else if (typeFilter === 'Status') {
-            setCategories([
-                ['Proposed', 'Active'],
-                ['Closed', 'Resolved'],
-                ['Reported', 'Disputed'],
-            ]);
+
         } else if (typeFilter === 'Currency') {
-            setCategories([
-                ['ZTG', 'EUR'],
-                ['SOL', 'USDCS'],
-            ]);
+
         }
     }, [typeFilter]);
-    const toggleSelection = (item: string) => {
+
+    const toggleSelection = (item: any) => {
+        // const value = typeFilter === 'Category' ? item.name : item;
+
         if (typeFilter === 'Category') {
             if (selectedCategories.includes(item)) {
                 setSelectedCategories(selectedCategories.filter((category) => category !== item));
@@ -89,7 +90,7 @@ const CateFilterModal = ({
                     <View style={styles.categories}>
                         {categories.map((row, rowIndex) => (
                             <View key={rowIndex} style={styles.categoryRow}>
-                                {row.map((item, index) => (
+                                {row.map((item: Category, index) => (
                                     <TouchableOpacity
                                         key={index}
                                         style={styles.categoryButton}
@@ -98,20 +99,15 @@ const CateFilterModal = ({
                                         <Text
                                             style={[
                                                 styles.categoryText,
-                                                (typeFilter === 'Category' && selectedCategories.includes(item)) ||
-                                                    (typeFilter === 'Status' && selectedStatus.includes(item)) ||
-                                                    (typeFilter === 'Currency' && selectedCurrency.includes(item))
+                                                selectedCategories.includes(item)
                                                     ? styles.selectedCategoryText
                                                     : {},
                                             ]}
                                         >
-                                            {item}
-                                            {(typeFilter === 'Category' && selectedCategories.includes(item)) ||
-                                                (typeFilter === 'Status' && selectedStatus.includes(item)) ||
-                                                (typeFilter === 'Currency' && selectedCurrency.includes(item))
-                                                ? ' ✕'
-                                                : ''}
+                                            {item.name}
+                                            {selectedCategories.includes(item) ? ' ✕' : ''}
                                         </Text>
+
                                     </TouchableOpacity>
                                 ))}
                             </View>
