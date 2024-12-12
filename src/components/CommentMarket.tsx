@@ -127,10 +127,9 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const handleGetAccess = async (wallet) => {
     const requestBody = {
       walletAddress: wallet,
-      // walletAddress: "laskdflaskjva234jhas",
     };
     const response = await api.post("/auth/login", requestBody, {
-      isPublic: true, // Attach isPublic directly
+      isPublic: true,
     } as any);
 
     const { access_token, refresh_token } = response.data;

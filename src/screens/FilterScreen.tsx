@@ -212,7 +212,7 @@ const FilterScreen = ({ navigation }: any) => {
           } catch (error) {
             setError('Có lỗi xảy ra khi lấy dữ liệu từ API.');
           } finally {
-            setLoading(false); // Kết thúc trạng thái loading
+            setLoading(false);
           }
         }}
       >

@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';  // Import icon
 import Header from '../components/Header';
+import { formatDistanceToNow, parseISO, parse } from 'date-fns';
+
 
 // Handle User 
 import { TopBar } from '../components/top-bar/top-bar-feature';
@@ -28,7 +30,9 @@ const UserSignedInScreen = ({ address, navigation }) => {
   var query = useGetBalance({ address });
   var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL" : "...";
   const [quantity, setQuantity] = useState('0');
-
+  const [betHistory, setBetHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const { handleGetUserInfo } = useApi();
   const [userInfo, setUserInfo] = useState({
@@ -66,6 +70,39 @@ const UserSignedInScreen = ({ address, navigation }) => {
     });
   }, [navigation, userInfo]);
 
+  const fetchBetHistory = async () => {
+    const id = userInfo.walletAddress;
+    try {
+      setLoading(true);
+      const response = await api.get(`/users/${id}/history`)
+      const result = response.data.bets;
+      setBetHistory(result);
+    } catch (err) {
+      setError("Failed to fetch bet history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBetHistory()
+  }, []);
+
+  // useEffect(() => {
+  //   const bets = [
+  //     {
+  //       "marketPublicKey": "D1aphTvapSBD7ELKeMghYFFfFRkcKzqgJadP13oRgF1z",
+  //       "marketTitle": "Will SOL reached 1000$ at the end of this year?",
+  //       "totalBet": "1156.83",
+  //       "tokens": 4.96557615,
+  //       "answerKey": "Yes",
+  //       "createTime": "2024-12-06T12:54:43.000Z"
+  //     },
+  //   ];
+  //   setBetHistory(bets);
+  // }, []);
+
+
   useEffect(() => {
     const getQuantityFavorite = async () => {
       try {
@@ -84,7 +121,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
 
   //const navigation = useNavigation() ;
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
 
 
       {/* Thông tin người dùng */}
@@ -144,8 +181,36 @@ const UserSignedInScreen = ({ address, navigation }) => {
         </View>
       </View>
 
+      {/* Activity */}
+      <View style={styles.profileFooter}>
+        <View style={styles.titleFooter}>
+          <Text style={styles.titleText}>Activity</Text>
+        </View>
 
-    </View>
+        {betHistory.length === 0 ? (
+          <Text style={styles.noBetText}>The user has not placed a bet yet!</Text>
+        ) : (
+          betHistory.map((bet, index) => {
+            const parsedTime = new Date(bet.createTime);
+            const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
+            return (
+              <View key={index} style={styles.contentFooter}>
+                <View style={styles.leftFooter}>
+                  <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
+                  <View style={styles.dateBet}>
+                    <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
+                    <Text style={styles.date}>{timeAgo} ago</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
+
+
+
+    </ScrollView>
   );
 };
 
@@ -153,6 +218,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 1,
     backgroundColor: '#fff',
+
   },
   header: {
     flexDirection: 'row',
@@ -253,7 +319,56 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-
+  profileFooter: {
+    paddingTop: 15,
+    padding: 10,
+    flexDirection: 'column',
+  },
+  titleFooter: {
+    borderBottomWidth: 1,
+    borderColor: '#f2f2f2',
+    paddingBottom: 8,
+  },
+  titleText: {
+    fontWeight: 'bold'
+  },
+  contentFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 0.5,
+    borderColor: '#f2f2f2',
+    backgroundColor: '#fff',
+  },
+  leftFooter: {
+    flexDirection: 'column',
+    padding: 8,
+  },
+  result: {
+    fontSize: 14,
+    color: '#666',
+  },
+  titleMarket: {
+    color: 'rgb(16, 104, 115)',
+  },
+  dateBet: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 5
+  },
+  date: {
+    color: '#666',
+    fontSize: 12
+  },
+  noBetText: {
+    textAlign: 'center',
+    color: '#888',
+    fontSize: 16,
+    marginTop: 20,
+  },
 });
 
 export default UserSignedInScreen;

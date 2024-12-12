@@ -1,9 +1,10 @@
 import { Text, StyleSheet, View, TouchableOpacity, Image } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import api from '../api/registerAccountApi';
 import { useAuthorization } from '../utils/useAuthorization';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 type RootStackParamList = {
@@ -32,10 +33,25 @@ interface CardItems {
 }
 
 const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats, favourites }) => {
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [localFavourites, setLocalFavourites] = useState<any[]>(favourites || []);
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [isLiked, setIsLiked] = useState(favourites && favourites.includes(publicKey) ? true : false);
     const { selectedAccount } = useAuthorization();
 
+    useEffect(() => {
+        const fetchAccessToken = async () => {
+            const token = await AsyncStorage.getItem("accessToken");
+            setAccessToken(token);
+
+            if (!token) {
+                setLocalFavourites([]);
+                setIsLiked(false);
+            }
+        };
+
+        fetchAccessToken();
+    }, []);
 
     const addLike = async (id) => {
         try {
@@ -55,7 +71,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
         }
     };
 
-    const toggleHeartColor = () => {
+    const toggleHeartColor = async () => {
         console.log(selectedAccount)
         if (!selectedAccount) {
             console.log("User is not logged in. Cannot like or unlike.");

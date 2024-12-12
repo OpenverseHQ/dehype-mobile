@@ -1,6 +1,5 @@
 import api from "../api/registerAccountApi";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View , Button} from "react-native";
 import { StatusBar } from "expo-status-bar";

@@ -208,7 +208,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
                             fontWeight: "bold",
                             textAlign: "center",
                             color: "white",
-                            fontSize:10
+                            fontSize: 10
                           }}
                         >
                           {item.value + "%"}
@@ -234,7 +234,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
                 <MenuOption
                   key={index}
                   style={styles.menuOption}
-                  onSelect={() => Alert.alert(`Selected: ${key}`)} // Thay đổi hành động nếu cần
+                  onSelect={() => Alert.alert(`Selected: ${key}`)} 
                 >
                   <Text style={styles.menuOptionText}>{key}</Text>
                   <Switch value={visibleKeys[key] ?? true} onValueChange={() => toggleKeyVisibility(key)} />
@@ -280,8 +280,8 @@ const styles = StyleSheet.create({
   menuOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%', // Giảm chiều rộng menu
-    backgroundColor: "#fff", // Màu nền menu
+    width: '100%', 
+    backgroundColor: "#fff", 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

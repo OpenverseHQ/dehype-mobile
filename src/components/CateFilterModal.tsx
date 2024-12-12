@@ -59,7 +59,6 @@ const CateFilterModal = ({
     }, [typeFilter]);
 
     const toggleSelection = (item: any) => {
-        // const value = typeFilter === 'Category' ? item.name : item;
 
         if (typeFilter === 'Category') {
             if (selectedCategories.includes(item)) {
@@ -125,7 +124,7 @@ const CateFilterModal = ({
                         } else if (typeFilter === 'Currency') {
                             onApply([], [], selectedCurrency);
                         }
-                        onClose(); // Đóng modal
+                        onClose();
                     }}
                 >
                     <Text style={styles.applyButtonText}>Apply</Text>

@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Text, StyleSheet, View, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import CategoryCollection from '../components/CategoryCollection';
@@ -8,6 +8,9 @@ import CardItem from '../components/CardItem';
 import api from '../api/registerAccountApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuthorization } from '../utils/useAuthorization';
+import useApi from '../utils/useApi';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 
 
@@ -20,14 +23,8 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const [favourites, setFavourites] = useState([]);
   const [selectedTab, setSelectedTab] = useState('All');
   const { selectedAccount } = useAuthorization();
+  const { handleGetAccess } = useApi();
 
-
-  // useEffect(() => {
-  //   if (route.params?.screen) {
-  //     console.log(route.params.screen)
-  //     setSelectedTab(route.params.screen); 
-  //   }
-  // }, [route.params?.screen]);
 
   const fetchCategories = async () => {
     try {
@@ -61,17 +58,19 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       }
     };
 
-    fetchMarketData();
-    fetch
-  }, []);
-
-  useEffect(() => {
     const fetchMarketFavorite = async () => {
       try {
+        const tmp = await AsyncStorage.getItem("accessToken");
+        if (!tmp) {
+          console.log('You need to log in to view your favorites list!');
+          setFavourites([]);
+          setMarketFavoriteData([]);
+          return;
+        }
+
         const response = await api.get('/search/details?fav=true');
         const markets = response.data;
-        setFavourites(response.data.map(item => item.publicKey));
-        console.log('phây vờ rít:', favourites)
+        setFavourites(markets.map((item: any) => item.publicKey));
 
         const marketsWithStats = await Promise.all(
           markets.map(async (market: any) => {
@@ -79,20 +78,18 @@ const HomeScreen2 = ({ navigation, route }: any) => {
             return { ...market, marketStats: statsResponse.data };
           })
         );
+
         setMarketFavoriteData(marketsWithStats);
+        console.log(marketFavoriteData)
       } catch (error) {
         console.error('Lỗi khi lấy danh sách favorite market:', error);
       }
     };
 
-    if (selectedAccount) {
-      const unsubscribe = navigation.addListener('focus', fetchMarketFavorite);
-      return unsubscribe;
-    } else {
-      setFavourites([]);
-    }
-  }, []);
+    fetchMarketData();
+    fetchMarketFavorite();
 
+  }, []);
 
   const filterByCategory = (category: string) => {
     return marketData.filter((market: any) => market.category === category);
