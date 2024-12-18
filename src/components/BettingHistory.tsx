@@ -5,10 +5,14 @@ import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { formatDistanceToNow, parseISO, parse } from 'date-fns';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 interface CommentMarketScreenProps {
     idMarket: string;
 }
+type RootStackParamList = {
+    InfoUser: { address: string };
+};
 
 const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
     const [voterData, setVoterData] = useState<any[]>([]);
@@ -17,6 +21,8 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
     const [minAmount, setMinAmount] = useState(0);
     const [isDropdownVisible, setDropdownVisible] = useState(false);
     const minAmountOptions = [0, 10, 100, 1000, 10000, 100000];
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
 
     const handleGetAccess = async (wallet) => {
         const requestBody = {
@@ -81,7 +87,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                         ))}
                     </View>
                 )}
-            </View> 
+            </View>
 
             {/* Danh sách FlatList */}
             <FlatList
@@ -95,7 +101,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                     const parsedTime = new Date(item.account.createTime);
                     const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
                     return (
-                        <View style={styles.itemContainer}>
+                        <TouchableOpacity style={styles.itemContainer} onPress={() => navigation.navigate('InfoUser', { address: item.account.voter })}>
                             <Image source={{ uri: item.avatarUrl }} style={styles.image} />
                             <View>
                                 <Text style={styles.username}>{truncatedUsername}</Text>
@@ -105,7 +111,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                                     (${item.totalBet}) {timeAgo} ago
                                 </Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     );
                 }}
             />

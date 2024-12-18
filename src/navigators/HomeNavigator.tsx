@@ -28,6 +28,7 @@ import SolanaLoginScreen from "../screens/SolanaLoginScreen";
 import UploadImageScreen from "../screens/UploadImageScreen";
 import ChartScreen from "../screens/ChartScreen";
 import GeminiChatScreen from "../screens/GeminiChatScreen";
+import UserProfileScreen from "../screens/UserProfileScreen";
 
 const Stack = createNativeStackNavigator();
 const UserStack = () => (
@@ -136,6 +137,7 @@ export default function HomeNavigator() {
         <Stack3.Screen name="Filter" component={FilterScreen} options={{ headerShown: false }} />
         <Stack3.Screen name="FilterResult" component={FilterResultScreen} options={{ headerShown: false }} />
         <Stack3.Screen name="DetailMarket" component={DetailMarketScreen} options={{ headerShown: false }} />
+        <Stack3.Screen name="InfoUser" component={UserProfileScreen} options={{ headerShown: false }} />
       </Stack3.Navigator>
   );
 }

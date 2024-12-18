@@ -8,6 +8,8 @@ import { formatDistanceToNow, parseISO, parse } from 'date-fns';
 
 // Hoang Custom
 import { useAuthorization } from '../utils/useAuthorization';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import FilterResultScreen from '../screens/FilterResultScreen';
 //
 
 interface Reply {
@@ -36,6 +38,11 @@ interface CommentMarketScreenProps {
   idMarket: string;
 }
 
+type RootStackParamList = {
+  InfoUser: { address: string };
+};
+
+
 const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -49,6 +56,8 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [enableMenu, setenableMenu] = useState<boolean>(false);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
 
 
 
@@ -339,7 +348,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     return (
       <View style={styles.commentItem}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.navigate('InfoUser', { address: item.walletAddress })}>
             {/* Kiểm tra avatarUrl trước khi render Image */}
             {item.avatarUrl ? (
               <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
@@ -347,7 +356,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
               <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
             )}
             <Text style={styles.username}> {item.username.length < 10 ? item.username : item.username.substring(0, 10).concat("...")} </Text>
-          </View>
+          </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={styles.timeAgo}>
               {timeAgo} ago

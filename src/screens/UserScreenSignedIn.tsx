@@ -27,6 +27,7 @@ function lamportsToSol(balance: number) {
 }
 
 const UserSignedInScreen = ({ address, navigation }) => {
+  console.log('Địa chỉ người dùng:', address)
   var query = useGetBalance({ address });
   var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL" : "...";
   const [quantity, setQuantity] = useState('0');
@@ -84,23 +85,23 @@ const UserSignedInScreen = ({ address, navigation }) => {
     }
   };
 
-  useEffect(() => {
-    fetchBetHistory()
-  }, []);
-
   // useEffect(() => {
-  //   const bets = [
-  //     {
-  //       "marketPublicKey": "D1aphTvapSBD7ELKeMghYFFfFRkcKzqgJadP13oRgF1z",
-  //       "marketTitle": "Will SOL reached 1000$ at the end of this year?",
-  //       "totalBet": "1156.83",
-  //       "tokens": 4.96557615,
-  //       "answerKey": "Yes",
-  //       "createTime": "2024-12-06T12:54:43.000Z"
-  //     },
-  //   ];
-  //   setBetHistory(bets);
+  //   fetchBetHistory()
   // }, []);
+
+  useEffect(() => {
+    const bets = [
+      {
+        "marketPublicKey": "D1aphTvapSBD7ELKeMghYFFfFRkcKzqgJadP13oRgF1z",
+        "marketTitle": "Will SOL reached 1000$ at the end of this year?",
+        "totalBet": "1156.83",
+        "tokens": 4.96557615,
+        "answerKey": "Yes",
+        "createTime": "2024-12-06T12:54:43.000Z"
+      },
+    ];
+    setBetHistory(bets);
+  }, []);
 
 
   useEffect(() => {
@@ -280,6 +281,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   cardContainer: {
+    padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
