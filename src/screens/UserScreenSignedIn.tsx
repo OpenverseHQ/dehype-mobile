@@ -26,12 +26,16 @@ function lamportsToSol(balance: number) {
   return Math.round((balance / LAMPORTS_PER_SOL) * 100000) / 100000;
 }
 
+type RootStackParamList = {
+  DetailMarket: { publicKey: string };
+};
+
 const UserSignedInScreen = ({ address, navigation }) => {
   console.log('Địa chỉ người dùng:', address)
   var query = useGetBalance({ address });
   var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL" : "...";
   const [quantity, setQuantity] = useState('0');
-  const [betHistory, setBetHistory] = useState([]);
+  const [betHistory, setBetHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -76,7 +80,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
     try {
       setLoading(true);
       const response = await api.get(`/users/${id}/history`)
-      const result = response.data.bets;
+      const result = response.data;
       setBetHistory(result);
     } catch (err) {
       setError("Failed to fetch bet history");
@@ -90,17 +94,25 @@ const UserSignedInScreen = ({ address, navigation }) => {
   // }, []);
 
   useEffect(() => {
-    const bets = [
-      {
-        "marketPublicKey": "D1aphTvapSBD7ELKeMghYFFfFRkcKzqgJadP13oRgF1z",
-        "marketTitle": "Will SOL reached 1000$ at the end of this year?",
-        "totalBet": "1156.83",
-        "tokens": 4.96557615,
-        "answerKey": "Yes",
-        "createTime": "2024-12-06T12:54:43.000Z"
+    const bet = {
+      "user": {
+        "walletAddress": "12341431safa123",
+        "username": "dehype"
       },
-    ];
-    setBetHistory(bets);
+      "bets": [
+        {
+          "marketId": "D1aphTvapSBD7ELKeMghYFFfFRkcKzqgJadP13oRgF1z",
+          "marketTitle": "Wil SoL become second BTC?",
+          "marketCoverUrl": "https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png",
+          "totalBet": 1000,
+          "tokens": 500,
+          "answerKey": "Yes",
+          "createTime": "2021-05-20T00:00:00.000Z"
+        }
+      ]
+    }
+    setBetHistory(bet);
+    console.log(bet)
   }, []);
 
 
@@ -117,10 +129,10 @@ const UserSignedInScreen = ({ address, navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
+  if (!betHistory) {
+    return <Text style={styles.noBetText}>Loading bet history...</Text>;
+  }
 
-
-
-  //const navigation = useNavigation() ;
   return (
     <ScrollView style={styles.container}>
 
@@ -188,29 +200,30 @@ const UserSignedInScreen = ({ address, navigation }) => {
           <Text style={styles.titleText}>Activity</Text>
         </View>
 
-        {betHistory.length === 0 ? (
+        {betHistory.bets.length === 0 ? (
           <Text style={styles.noBetText}>The user has not placed a bet yet!</Text>
         ) : (
-          betHistory.map((bet, index) => {
+          betHistory.bets.map((bet, index) => {
             const parsedTime = new Date(bet.createTime);
             const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
             return (
               <View key={index} style={styles.contentFooter}>
-                <View style={styles.leftFooter}>
-                  <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
-                  <View style={styles.dateBet}>
-                    <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
-                    <Text style={styles.date}>{timeAgo} ago</Text>
+                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketId })}>
+                  <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
+                  <View>
+                    <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
+                    <View style={styles.dateBet}>
+                      <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
+                      <Text style={styles.date}>{timeAgo} ago</Text>
+                    </View>
                   </View>
-                </View>
+
+                </TouchableOpacity>
               </View>
             );
           })
         )}
       </View>
-
-
-
     </ScrollView>
   );
 };
@@ -343,7 +356,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   leftFooter: {
-    flexDirection: 'column',
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 8,
   },
   result: {
@@ -358,8 +372,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-    marginTop: 5
+    width: '90%',
+    marginTop: 5,
   },
   date: {
     color: '#666',

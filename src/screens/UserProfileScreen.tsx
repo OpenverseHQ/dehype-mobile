@@ -5,6 +5,7 @@ import { formatDistanceToNow, parseISO, parse } from 'date-fns';
 import { TopBar } from '../components/top-bar/top-bar-feature';
 import useApi from '../utils/useApi';
 import { useEffect, useState } from 'react';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import api from '../api/registerAccountApi';
 import { useAuthorization } from '../utils/useAuthorization';
 
@@ -16,6 +17,11 @@ interface UserProfileScreenProps {
     };
 }
 
+type RootStackParamList = {
+    DetailMarket: { publicKey: string };
+};
+
+
 const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
     const { address } = route.params;
     console.log('Địa chỉ người dùng mới của tauuuuuuuuuuu:', address);
@@ -23,7 +29,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
     const { selectedAccount } = useAuthorization();
     console.log('nick chinhhhh:', selectedAccount.publicKey)
     const [error, setError] = useState('');
-    const [betHistory, setBetHistory] = useState([]);
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+    const [betHistory, setBetHistory] = useState(null);
     const { handleGetUserInfo } = useApi();
     const [userInfo, setUserInfo] = useState({
         "walletAddress": "AXvu8CZGasQ72sHVBD9cdYBqKvb7PR6VtHA55JYYXAPA",
@@ -52,7 +59,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
         try {
             setLoading(true);
             const response = await api.get(`/users/${id}/history`)
-            const result = response.data.bets;
+            const result = response.data;
             setBetHistory(result);
         } catch (err) {
             setError("Failed to fetch bet history");
@@ -61,14 +68,14 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
         }
     };
 
+
     useEffect(() => {
         fetchBetHistory()
     }, []);
 
-
-
-
-    //const navigation = useNavigation() ;
+    if (!betHistory) {
+        return <Text style={styles.noBetText}>Loading bet history...</Text>;
+    }
     return (
         <ScrollView style={styles.container}>
 
@@ -126,21 +133,25 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
                     <Text style={styles.titleText}>Activity</Text>
                 </View>
 
-                {betHistory.length === 0 ? (
+                {betHistory.bets.length === 0 ? (
                     <Text style={styles.noBetText}>The user has not placed a bet yet!</Text>
                 ) : (
-                    betHistory.map((bet, index) => {
+                    betHistory.bets.map((bet, index) => {
                         const parsedTime = new Date(bet.createTime);
                         const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
                         return (
                             <View key={index} style={styles.contentFooter}>
-                                <View style={styles.leftFooter}>
-                                    <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
-                                    <View style={styles.dateBet}>
-                                        <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
-                                        <Text style={styles.date}>{timeAgo} ago</Text>
+                                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketId })}>
+                                    <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
+                                    <View>
+                                        <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
+                                        <View style={styles.dateBet}>
+                                            <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
+                                            <Text style={styles.date}>{timeAgo} ago</Text>
+                                        </View>
                                     </View>
-                                </View>
+
+                                </TouchableOpacity>
                             </View>
                         );
                     })
@@ -287,6 +298,7 @@ const styles = StyleSheet.create({
     },
     leftFooter: {
         flexDirection: 'column',
+        alignItems: 'center',
         padding: 8,
     },
     result: {
@@ -316,6 +328,8 @@ const styles = StyleSheet.create({
     },
     wallet: {
         color: '#666',
+        fontSize: 10,
+        marginTop: 5
     }
 });
 

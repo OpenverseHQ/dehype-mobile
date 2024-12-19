@@ -1,45 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';  // Import icon
+import Icon from 'react-native-vector-icons/Ionicons';
+import api from '../api/registerAccountApi';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
-// Dữ liệu mẫu cho Leaderboard (dữ liệu cho All, Month, Year)
-const allData = [
-  { id: '1', username: 'ThangTran', avatar: 'https://example.com/avatar1.jpg', marketsWon: 50 },
-  { id: '2', username: 'DucAnh', avatar: 'https://example.com/avatar2.jpg', marketsWon: 45 },
-  { id: '3', username: 'HongNhung', avatar: 'https://example.com/avatar3.jpg', marketsWon: 40 },
-  { id: '4', username: 'AnhVu', avatar: 'https://example.com/avatar4.jpg', marketsWon: 35 },
-  { id: '5', username: 'QuangNguyen', avatar: 'https://example.com/avatar5.jpg', marketsWon: 30 },
-];
 
-const monthlyData = [
-  { id: '1', username: 'ThangTran', avatar: 'https://example.com/avatar1.jpg', marketsWon: 10 },
-  { id: '2', username: 'DucAnh', avatar: 'https://example.com/avatar2.jpg', marketsWon: 9 },
-  { id: '3', username: 'HongNhung', avatar: 'https://example.com/avatar3.jpg', marketsWon: 8 },
-  { id: '4', username: 'AnhVu', avatar: 'https://example.com/avatar4.jpg', marketsWon: 7 },
-  { id: '5', username: 'QuangNguyen', avatar: 'https://example.com/avatar5.jpg', marketsWon: 6 },
-];
-
-const yearlyData = [
-  { id: '1', username: 'ThangTran', avatar: 'https://example.com/avatar1.jpg', marketsWon: 20 },
-  { id: '2', username: 'DucAnh', avatar: 'https://example.com/avatar2.jpg', marketsWon: 18 },
-  { id: '3', username: 'HongNhung', avatar: 'https://example.com/avatar3.jpg', marketsWon: 16 },
-  { id: '4', username: 'AnhVu', avatar: 'https://example.com/avatar4.jpg', marketsWon: 14 },
-  { id: '5', username: 'QuangNguyen', avatar: 'https://example.com/avatar5.jpg', marketsWon: 12 },
-];
+type RootStackParamList = {
+  InfoUser: { address: string };
+};
 
 const LeaderboardPage = () => {
-  const [selectedTab, setSelectedTab] = useState('All');
-  
-  // Function để lấy dữ liệu dựa trên tab được chọn
-  const getLeaderboardData = () => {
-    if (selectedTab === 'Month') {
-      return monthlyData;
-    } else if (selectedTab === 'Year') {
-      return yearlyData;
-    } else {
-      return allData;
+  const [selectedTab, setSelectedTab] = useState('Volume');
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+
+  const fetchLeaderboardData = async (tab) => {
+    setLoading(true);
+    try {
+      const endpoint =
+        tab === 'Volume'
+          ? '/statistics/most-betting'
+          : '/statistics/most-betting';
+      const response = await api.get(endpoint);
+      setLeaderboardData(response.data);
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const formatUsername = (username) => {
+    return username.length > 15 ? `${username.slice(0, 15)}...` : username;
+  };
+
+  const formatMarketsWon = (marketsWon) => {
+    return parseFloat(marketsWon).toFixed(3);
+  };
+
+
+  useEffect(() => {
+    fetchLeaderboardData(selectedTab);
+  }, [selectedTab]);
 
   return (
     <View style={styles.container}>
@@ -52,46 +56,56 @@ const LeaderboardPage = () => {
       {/* Tab Selector */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, selectedTab === 'Month' && styles.activeTab]}
-          onPress={() => setSelectedTab('Month')}
+          style={[styles.tab, selectedTab === 'Volume' && styles.activeTab]}
+          onPress={() => setSelectedTab('Volume')}
         >
-          <Text style={[styles.tabText, selectedTab === 'Month' && styles.activeTabText]}>Month</Text>
+          <Icon
+            name="bar-chart"
+            style={[styles.tabText, selectedTab === 'Volume' && styles.activeTabText]}
+          />
+          <Text style={[styles.tabText, selectedTab === 'Volume' && styles.activeTabText]}>
+            Volume
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, selectedTab === 'Year' && styles.activeTab]}
-          onPress={() => setSelectedTab('Year')}
+          style={[styles.tab, selectedTab === 'Profit' && styles.activeTab]}
+          onPress={() => setSelectedTab('Profit')}
         >
-          <Text style={[styles.tabText, selectedTab === 'Year' && styles.activeTabText]}>Year</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
-          onPress={() => setSelectedTab('All')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'All' && styles.activeTabText]}>All</Text>
+          <Icon
+            name="logo-usd"
+            style={[styles.tabText, selectedTab === 'Profit' && styles.activeTabText]}
+          />
+          <Text style={[styles.tabText, selectedTab === 'Profit' && styles.activeTabText]}>
+            Profit
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Danh sách leaderboard */}
-      <FlatList
-        data={getLeaderboardData()}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <View style={styles.leaderboardCard}>
-            <Text style={styles.rank}>#{index + 1}</Text>
-            <Image
-              source={{ uri: item.avatar }}
-              style={styles.avatar}
-            />
-            <View style={styles.userInfo}>
-              <Text style={styles.username}>{item.username}</Text>
-              <Text style={styles.marketsWon}>Markets Won: {item.marketsWon}</Text>
-            </View>
-          </View>
-        )}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
+      {loading ? (
+        <Text style={styles.loadingText}>Loading...</Text>
+      ) : (
+        <FlatList
+          data={leaderboardData}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity style={styles.leaderboardCard} onPress={() => navigation.navigate('InfoUser', { address: item.walletAddress })}>
+              {index < 3 && (
+                <Icon name="ribbon" size={20} color="#FFD700" style={styles.ribbonIcon} />
+              )}
+              <View style={styles.noRank}><Text style={styles.rank}>{index + 1}</Text></View>
+              <Image source={{ uri: item.avatarUrl }} style={styles.avatar} />
+              <View style={styles.userInfo}>
+                <Text style={styles.username}>{formatUsername(item.username)}</Text>
+                <Text style={styles.marketsWon}>Volume: ${formatMarketsWon(item.totalBetting)}</Text>
+              </View>
+
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      )}
     </View>
   );
 };
@@ -106,7 +120,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
+    paddingVertical: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     marginBottom: 10,
@@ -125,6 +139,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   activeTab: {
     borderBottomColor: '#4b7bec',
@@ -132,6 +149,8 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     color: '#666',
+    fontWeight: 'bold',
+    marginRight: 5
   },
   activeTabText: {
     color: '#4b7bec',
@@ -150,9 +169,19 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   rank: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
+  },
+  noRank: {
+    // backgroundColor: '#4b7bec',
+    borderRadius: 50,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 15,
+    width: 25,
+    height: 25
   },
   avatar: {
     width: 50,
@@ -171,6 +200,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  loadingText: { textAlign: 'center', marginVertical: 20, fontSize: 16 },
+  ribbonIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+
 });
 
 export default LeaderboardPage;
