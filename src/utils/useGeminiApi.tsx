@@ -4,7 +4,7 @@ import * as GoogleGenerativeAI from "@google/generative-ai";
 
 
 // Thay YOUR_API_KEY bằng API key của bạn
-const API_KEY = 'AIzaSyBc74wz4lN1PELFrgMZSeh9WW-t_8pjyVs';
+const API_KEY = '';
 
 // Custom Hook gọi API Gemini
 const useGeminiAPI = () => {
