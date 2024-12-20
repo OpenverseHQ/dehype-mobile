@@ -42,54 +42,52 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
-        const response = await api.get('/markets');
-        const markets = response.data;
+        // Kiểm tra nếu chưa đăng nhập
+        if (!selectedAccount) {
+          console.log('Chưa đăng nhập.. Vui lòng đăng nhập để xem danh sách yêu thích.');
+          return;
+        }
 
-        const marketsWithStats = await Promise.all(
-          markets.map(async (market: any) => {
+        console.log('Token hiện tại:', selectedAccount);
+
+        // Fetch all markets
+        const marketResponse = await api.get('/markets');
+        const allMarkets = marketResponse.data;
+
+        // Fetch favorite markets
+        const auth = await handleGetAccess(selectedAccount.publicKey);
+
+        const favoriteResponse = await api.get('/search/details?fav=true');
+        const favoriteMarkets = favoriteResponse.data;
+
+        // Extract favorite public keys
+        const favoritePublicKeys = favoriteMarkets.map((item: any) => item.publicKey);
+        setFavourites(favoritePublicKeys);
+
+        // Combine and fetch stats for all markets
+        const allMarketsWithStats = await Promise.all(
+          allMarkets.map(async (market: any) => {
             const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
             return { ...market, marketStats: statsResponse.data };
           })
         );
 
-        setMarketData(marketsWithStats);
+        const favoriteMarketsWithStats = allMarketsWithStats.filter((market: any) =>
+          favoritePublicKeys.includes(market.publicKey)
+        );
+
+        setMarketData(allMarketsWithStats);
+        setMarketFavoriteData(favoriteMarketsWithStats);
+
       } catch (error) {
         console.error('Error fetching market data:', error);
       }
     };
 
-    const fetchMarketFavorite = async () => {
-      try {
-        const tmp = await AsyncStorage.getItem("accessToken");
-        if (!tmp) {
-          console.log('You need to log in to view your favorites list!');
-          setFavourites([]);
-          setMarketFavoriteData([]);
-          return;
-        }
-
-        const response = await api.get('/search/details?fav=true');
-        const markets = response.data;
-        setFavourites(markets.map((item: any) => item.publicKey));
-
-        const marketsWithStats = await Promise.all(
-          markets.map(async (market: any) => {
-            const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
-            return { ...market, marketStats: statsResponse.data };
-          })
-        );
-
-        setMarketFavoriteData(marketsWithStats);
-        console.log(marketFavoriteData)
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách favorite market:', error);
-      }
-    };
-
     fetchMarketData();
-    fetchMarketFavorite();
+  }, [navigation]);
 
-  }, []);
+
 
   const filterByCategory = (category: string) => {
     return marketData.filter((market: any) => market.category === category);

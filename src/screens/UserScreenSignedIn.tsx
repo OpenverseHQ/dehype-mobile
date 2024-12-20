@@ -26,9 +26,6 @@ function lamportsToSol(balance: number) {
   return Math.round((balance / LAMPORTS_PER_SOL) * 100000) / 100000;
 }
 
-type RootStackParamList = {
-  DetailMarket: { publicKey: string };
-};
 
 const UserSignedInScreen = ({ address, navigation }) => {
   console.log('Địa chỉ người dùng:', address)
@@ -38,7 +35,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
   const [betHistory, setBetHistory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const { handleGetAccess } = useApi();
   const { handleGetUserInfo } = useApi();
   const [userInfo, setUserInfo] = useState({
     "walletAddress": "AXvu8CZGasQ72sHVBD9cdYBqKvb7PR6VtHA55JYYXAPA",
@@ -50,19 +47,23 @@ const UserSignedInScreen = ({ address, navigation }) => {
   });
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchUserDetails = async () => {
       try {
+        // Fetch user info
         const userInfo = await handleGetUserInfo(address);
         setUserInfo(userInfo);
-        // console.log("User info:", userInfo);
+
+        // Fetch quantity favorite
+        const auth = await handleGetAccess(userInfo.walletAddress)
+        const response = await api.get('/search/details?fav=true');
+        setQuantity(response.data.length);
       } catch (error) {
-        console.error("Error fetching user info:", error);
+        console.error("Error fetching user details:", error);
       }
     };
+    fetchUserDetails();
+  }, [address, navigation]);
 
-    fetchUserInfo();
-  }
-    , [address]);
 
   const handlePress = useCallback(() => {
     navigation.navigate("UploadImageScreen", {
@@ -116,18 +117,18 @@ const UserSignedInScreen = ({ address, navigation }) => {
   }, []);
 
 
-  useEffect(() => {
-    const getQuantityFavorite = async () => {
-      try {
-        const response = await api.get('/search/details?fav=true');
-        setQuantity(response.data.length);
-      } catch (error) {
-        console.error('Lỗi khi lấy quantity:', error);
-      }
-    };
-    const unsubscribe = navigation.addListener('focus', getQuantityFavorite);
-    return unsubscribe;
-  }, [navigation]);
+  // useEffect(() => {
+  //   const getQuantityFavorite = async () => {
+  //     try {
+  //       const response = await api.get('/search/details?fav=true');
+  //       setQuantity(response.data.length);
+  //     } catch (error) {
+  //       console.error('Lỗi khi lấy quantity:', error);
+  //     }
+  //   };
+  //   const unsubscribe = navigation.addListener('focus', getQuantityFavorite);
+  //   return unsubscribe;
+  // }, [navigation]);
 
   if (!betHistory) {
     return <Text style={styles.noBetText}>Loading bet history...</Text>;

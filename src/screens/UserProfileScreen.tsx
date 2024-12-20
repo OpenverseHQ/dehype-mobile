@@ -42,39 +42,34 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
     });
 
     useEffect(() => {
-        const fetchUserInfo = async () => {
-            try {
-                const userInfo = await handleGetUserInfo(address);
-                setUserInfo(userInfo);
-            } catch (error) {
-                console.error("Error fetching user profile:", error);
+        const fetchUserDataAndBetHistory = async () => {
+          try {
+            // Fetch user info
+            const userInfo = await handleGetUserInfo(address);
+            setUserInfo(userInfo);
+      
+            // Fetch bet history using user info
+            if (userInfo && userInfo.walletAddress) {
+              setLoading(true);
+              const response = await api.get(`/users/${userInfo.walletAddress}/history`);
+              const result = response.data;
+              setBetHistory(result);
+            } else {
+              console.warn("User info không chứa walletAddress. Không thể lấy lịch sử đặt cược.");
             }
-        };
-
-        fetchUserInfo();
-    }
-        , [address]);
-    const fetchBetHistory = async () => {
-        const id = userInfo.walletAddress;
-        try {
-            setLoading(true);
-            const response = await api.get(`/users/${id}/history`)
-            const result = response.data;
-            setBetHistory(result);
-        } catch (err) {
-            setError("Failed to fetch bet history");
-        } finally {
+          } catch (error) {
+            console.error("Error fetching user profile or bet history:", error);
+            setError("Failed to fetch user data or bet history");
+          } finally {
             setLoading(false);
-        }
-    };
-
-
-    useEffect(() => {
-        fetchBetHistory()
-    }, []);
-
+          }
+        };
+      
+        fetchUserDataAndBetHistory();
+      }, [address]);
+      
     if (!betHistory) {
-        return <Text style={styles.noBetText}>Loading bet history...</Text>;
+        return <Text style={styles.noBetText}>Loading...</Text>;
     }
     return (
         <ScrollView style={styles.container}>
@@ -141,7 +136,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
                         const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
                         return (
                             <View key={index} style={styles.contentFooter}>
-                                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketId })}>
+                                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketPublicKey })}>
                                     <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
                                     <View>
                                         <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
@@ -297,7 +292,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     leftFooter: {
-        flexDirection: 'column',
+        display:'flex',
+        flexDirection: 'row',
         alignItems: 'center',
         padding: 8,
     },
@@ -313,7 +309,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        width: '100%',
+        width: '90%',
         marginTop: 5
     },
     date: {
