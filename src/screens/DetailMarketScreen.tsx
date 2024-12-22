@@ -144,7 +144,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
         <>
           {/* Phần biểu đồ */}
          <ChartScreen idMarket={publicKey}/>
-         <GeminiAIButton/>
+         <GeminiAIButton marketTitle={market.title} marketDescription={market.description}/>
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
             <Text style={styles.aboutTitle}>About Market</Text>

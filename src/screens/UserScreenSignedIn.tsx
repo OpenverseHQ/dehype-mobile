@@ -209,7 +209,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
             const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
             return (
               <View key={index} style={styles.contentFooter}>
-                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketId })}>
+                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketPublicKey })}>
                   <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
                   <View>
                     <Text style={styles.titleMarket}>{bet.marketTitle}</Text>

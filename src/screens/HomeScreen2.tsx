@@ -44,7 +44,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       try {
         // Kiểm tra nếu chưa đăng nhập
         if (!selectedAccount) {
-          console.log('Chưa đăng nhập.. Vui lòng đăng nhập để xem danh sách yêu thích.');
+          console.log('Chưa đăng nhập.');
           return;
         }
 
