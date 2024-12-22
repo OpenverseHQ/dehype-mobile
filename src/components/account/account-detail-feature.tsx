@@ -16,14 +16,14 @@ export function AccountDetailFeature() {
   const theme = useTheme();
 
   return (
-    <>
-      <View style={{ marginTop: 24, alignItems: "center" }}>
+    <View>
+      <View style={{alignItems: "center" }}>
         <AccountBalance address={selectedAccount.publicKey} />
         <AccountButtonGroup address={selectedAccount.publicKey} />
       </View>
-      <View style={{ marginTop: 48 }}>
+      {/* <View style={{ marginTop: 4 }}>
         <AccountTokens address={selectedAccount.publicKey} />
-      </View>
-    </>
+      </View> */}
+    </View>
   );
 }

@@ -8,6 +8,14 @@ import BettingHistory from '../components/BettingHistory';
 import { htmlToText } from 'html-to-text';
 import ChartScreen from './ChartScreen';
 import GeminiAIButton from '../components/GeminiAIButton';
+import { useGetBalance } from '../components/account/account-data-access';
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Account, useAuthorization } from "../utils/useAuthorization";
+
+
+function lamportsToSol(balance: number) {
+  return Math.round((balance / LAMPORTS_PER_SOL) * 100000) / 100000;
+}
 
 interface DetailMarketScreenProps {
   route: {
@@ -18,14 +26,18 @@ interface DetailMarketScreenProps {
 }
 
 const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
+  const { selectedAccount } = useAuthorization();
+  const address = selectedAccount.publicKey;
   const [amount, setAmount] = useState('0');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState<any>(null);
   const [selectedChoice, setSelectedChoice] = useState<'Yes' | 'No'>('Yes');
   const { publicKey } = route.params;
   const [market, setMarket] = useState<any>(null);
-  const [selectedTab, setSelectedTab] = useState('Comment'); 
+  const [selectedTab, setSelectedTab] = useState('Comment');
   const [isLiked, setIsLiked] = useState(false);
+  const { data: balanceData } = useGetBalance({ address });
+  const Balance = lamportsToSol(balanceData);
 
   const toggleHeartColor = () => {
     setIsLiked(!isLiked);
@@ -143,8 +155,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       ListFooterComponent={
         <>
           {/* Phần biểu đồ */}
-         <ChartScreen idMarket={publicKey}/>
-         <GeminiAIButton marketTitle={market.title} marketDescription={market.description}/>
+          <ChartScreen idMarket={publicKey} />
+          <GeminiAIButton marketTitle={market.title} marketDescription={market.description} />
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
             <Text style={styles.aboutTitle}>About Market</Text>
@@ -201,14 +213,14 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                     <View style={styles.closeButton}></View>
                   </TouchableOpacity>
                   <View style={styles.modalHeader}>
-                    <Image style={{ flex: 1, marginRight: 5 }} source={require('../../assets/Male_User.png')} />
+                    <Image style={{ flex: 1, marginRight: 5, width: 45, height: 45 }} source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png' }} />
                     <View style={{ flex: 6 }}>
                       <Text style={styles.modalTitle}>{selectedOutcome.option}</Text>
-                      <Text style={{ fontSize: 10 }}>
-                        $ {((parseFloat(selectedOutcome.percentage) / 100) * market.volume).toFixed(2)} {market.coin}
+                      <Text style={{ fontSize: 12 }}>
+                        Current balance: {Balance} SOL
                       </Text>
                     </View>
-                    <Text style={{ flex: 1, fontSize: 20 }}>{selectedOutcome.percentage}</Text>
+                    <Text style={{ flex: 1.5, fontSize: 16 }}>{selectedOutcome.percentage}%</Text>
                   </View>
                   <View style={styles.choiceContainer}>
                     <TouchableOpacity
@@ -233,19 +245,22 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                   <View style={styles.buyContainer}>
                     <View style={styles.buyHeader}>
                       <Text style={styles.buyTitle}>You're Buying</Text>
-                      <Text style={styles.balance}>{amount} SOL</Text>
+                      <Text style={styles.balance} numberOfLines={1}>{amount} SOL</Text>
                       <View style={styles.valueButtons}>
-                        <TouchableOpacity style={styles.valueButton}>
+                        <TouchableOpacity style={styles.valueButton} onPress={() => setAmount((Balance / 2).toFixed(2))}>
                           <Text style={styles.valueButtonText}>HALF</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.valueButton}>
+                        <TouchableOpacity style={styles.valueButton} onPress={() => setAmount(Balance.toString())}>
                           <Text style={styles.valueButtonText}>MAX</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
                     <View style={styles.buyBody}>
                       <View style={styles.currencySelector}>
-                        <Image source={require('../../assets/Male_User.png')} style={styles.currencyIcon} />
+                        <Image
+                          source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png' }}
+                          style={styles.currencyIcon}
+                        />
                         <Text style={styles.currencyText}>SOL</Text>
                       </View>
                       <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
@@ -383,17 +398,19 @@ const styles = StyleSheet.create({
   buyTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
   buyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
   },
   balance: {
+    maxWidth: 100,
     fontSize: 14,
     fontWeight: 'bold',
   },
+  
   valueButtons: {
     flexDirection: 'row',
   },

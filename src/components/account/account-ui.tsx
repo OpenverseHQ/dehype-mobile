@@ -26,14 +26,14 @@ function lamportsToSol(balance: number) {
 export function AccountBalance({ address }: { address: PublicKey }) {
   const query = useGetBalance({ address });
   return (
-    <>
+    <View>
       <View style={styles.accountBalance}>
         <Text variant="titleMedium">Current Balance</Text>
         <Text variant="displayLarge">
           {query.data ? lamportsToSol(query.data) : "..."} SOL
         </Text>
       </View>
-    </>
+    </View>
   );
 }
 
@@ -44,7 +44,7 @@ export function AccountButtonGroup({ address }: { address: PublicKey }) {
   const [showSendModal, setShowSendModal] = useState(false);
 
   return (
-    <>
+    <View>
       <View style={styles.accountButtonGroup}>
         <AirdropRequestModal
           hide={() => setShowAirdropModal(false)}
@@ -85,7 +85,7 @@ export function AccountButtonGroup({ address }: { address: PublicKey }) {
           Receive
         </Button>
       </View>
-    </>
+    </View>
   );
 }
 
@@ -207,7 +207,7 @@ export function AccountTokens({ address }: { address: PublicKey }) {
   }, [query.data, itemsPerPage]);
 
   return (
-    <>
+    <View>
       <Text
         variant="titleMedium"
         style={{
@@ -230,7 +230,7 @@ export function AccountTokens({ address }: { address: PublicKey }) {
           </Text>
         )}
         {query.isSuccess && (
-          <>
+          <View>
             <DataTable>
               <DataTable.Header>
                 <DataTable.Title>Public Key</DataTable.Title>
@@ -269,10 +269,10 @@ export function AccountTokens({ address }: { address: PublicKey }) {
                 />
               )}
             </DataTable>
-          </>
+          </View>
         )}
       </ScrollView>
-    </>
+    </View>
   );
 }
 

@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity, ScrollView 
 import Icon from 'react-native-vector-icons/Ionicons';  // Import icon
 import Header from '../components/Header';
 import { formatDistanceToNow, parseISO, parse } from 'date-fns';
-
+import { AccountDetailFeature } from '../components/account/account-detail-feature';
 
 // Handle User 
 import { TopBar } from '../components/top-bar/top-bar-feature';
@@ -29,8 +29,8 @@ function lamportsToSol(balance: number) {
 
 const UserSignedInScreen = ({ address, navigation }) => {
   console.log('Địa chỉ người dùng:', address)
-  var query = useGetBalance({ address });
-  var Balance = query.data ? lamportsToSol(query.data).toString() + " SOL" : "...";
+  const { data: balanceData } = useGetBalance({ address });
+  const Balance = balanceData ? lamportsToSol(balanceData).toString() + " SOL" : "...";
   const [quantity, setQuantity] = useState('0');
   const [betHistory, setBetHistory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,15 +54,22 @@ const UserSignedInScreen = ({ address, navigation }) => {
         setUserInfo(userInfo);
 
         // Fetch quantity favorite
-        const auth = await handleGetAccess(userInfo.walletAddress)
+        const auth = await handleGetAccess(userInfo.walletAddress);
         const response = await api.get('/search/details?fav=true');
         setQuantity(response.data.length);
+
+        // Đảm bảo balance được cập nhật đúng
+        if (balanceData) {
+          const balance = lamportsToSol(balanceData).toString() + " SOL";
+          console.log('Số dư người dùng:', balance);
+        }
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
     };
+
     fetchUserDetails();
-  }, [address, navigation]);
+  }, [address, navigation, balanceData]);
 
 
   const handlePress = useCallback(() => {
@@ -116,20 +123,6 @@ const UserSignedInScreen = ({ address, navigation }) => {
     console.log(bet)
   }, []);
 
-
-  // useEffect(() => {
-  //   const getQuantityFavorite = async () => {
-  //     try {
-  //       const response = await api.get('/search/details?fav=true');
-  //       setQuantity(response.data.length);
-  //     } catch (error) {
-  //       console.error('Lỗi khi lấy quantity:', error);
-  //     }
-  //   };
-  //   const unsubscribe = navigation.addListener('focus', getQuantityFavorite);
-  //   return unsubscribe;
-  // }, [navigation]);
-
   if (!betHistory) {
     return <Text style={styles.noBetText}>Loading bet history...</Text>;
   }
@@ -167,7 +160,8 @@ const UserSignedInScreen = ({ address, navigation }) => {
         </TouchableOpacity>
 
       </View>
-
+      {/* Solana Balance */}
+        <AccountDetailFeature />
       {/* Thẻ thống kê */}
       <View style={styles.cardContainer}>
         <TouchableOpacity
@@ -265,7 +259,6 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
     marginTop: 10,
   },
   avatar: {
@@ -295,6 +288,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   cardContainer: {
+    marginTop: 15,
     padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -321,7 +315,7 @@ const styles = StyleSheet.create({
   },
   favoriteBadge: {
     position: 'absolute',
-    top: 25,
+    top: 15,
     right: 10,
     backgroundColor: 'red',
     borderRadius: 10,
@@ -385,6 +379,22 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 16,
     marginTop: 20,
+  },
+  balanceContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  balanceLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  balanceValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'black',
   },
 });
 
