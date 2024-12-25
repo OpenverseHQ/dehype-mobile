@@ -1,22 +1,20 @@
+import {transact, Web3MobileWallet} from '@solana-mobile/mobile-wallet-adapter-protocol-web3js';
 
-const EventSource = require('eventsource')// const { default: ChartScreen } = require('./src/screens/ChartScreen');
-// require(ChartScreen)
-
-
-
-const url = 'https://dehype.api.openverse.tech/api/v1/markets/7GL9fMUzY9r6WPCvJbtbJAhNdLr1h8pNf9Je9oqjxapf/live-updates';
-const es = new EventSource(url);
-
-console.log('Connecting to SSE server...');
-
-es.onopen = () => {
-  console.log('SSE connection opened.');
+export const APP_IDENTITY = {
+  name: 'React Native dApp',
+  uri:  'https://yourdapp.com'
+  icon: "favicon.ico", // Full path resolves to https://yourdapp.com/favicon.ico
 };
 
-es.onmessage = (event) => {
-  console.log('Received event:', event.data);
-};
+const authorizationResult = await transact(async (wallet: Web3MobileWallet) => {
+    const authorizationResult = await wallet.authorize({
+        cluster: 'solana:devnet',
+        identity: APP_IDENTITY,
+    });
 
-es.onerror = (error) => {
-  console.error('Error:', error);
-};
+    /* After approval, signing requests are available in the session. */
+
+    return authorizationResult;
+});
+
+console.log("Connected to: " + authorizationResult.accounts[0].address)

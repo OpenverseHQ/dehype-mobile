@@ -14,8 +14,6 @@ import { toUint8Array } from "js-base64";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 
-
-
 const CHAIN = "solana";
 const CLUSTER = "devnet";
 const CHAIN_IDENTIFIER = `${CHAIN}:${CLUSTER}`;
@@ -147,7 +145,7 @@ export function useAuthorization() {
         identity: APP_IDENTITY,
         chain: CHAIN_IDENTIFIER,
         auth_token: authorization?.authToken,
-        sign_in_payload: signInPayload,
+        sign_in_payload: signInPayload
       });
       return (await handleAuthorizationResult(authorizationResult))
         .selectedAccount;
@@ -164,9 +162,6 @@ export function useAuthorization() {
     },
     [authorization]
   );
-
-
-
   return useMemo(
     () => ({
       accounts: authorization?.accounts ?? null,

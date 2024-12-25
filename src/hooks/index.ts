@@ -1,2 +1,2 @@
-export * from "../hooks/useAnchorProvider";
-export * from "../hooks/useMarket";
+export * from "./useMarket";
+export * from "./useAnchorProvider";

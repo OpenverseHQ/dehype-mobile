@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import CommentMarketScreen from '../components/CommentMarket';
 import api from '../api/registerAccountApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -11,6 +11,14 @@ import GeminiAIButton from '../components/GeminiAIButton';
 import { useGetBalance } from '../components/account/account-data-access';
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { Account, useAuthorization } from "../utils/useAuthorization";
+import Decimal from "decimal.js";
+import { Idl, Program } from '@project-serum/anchor';
+// import { useMarketProgram } from '../hooks';
+import { useForm } from "react-hook-form";
+import { BN } from "@coral-xyz/anchor";
+import { Market, MarketStats } from '../types'
+import { useMarketProgram, useMarketStats } from '../hooks';
+
 
 
 function lamportsToSol(balance: number) {
@@ -20,7 +28,7 @@ function lamportsToSol(balance: number) {
 interface DetailMarketScreenProps {
   route: {
     params: {
-      publicKey: string;
+      publicKeyMarket: string;
     };
   };
 }
@@ -32,12 +40,40 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState<any>(null);
   const [selectedChoice, setSelectedChoice] = useState<'Yes' | 'No'>('Yes');
-  const { publicKey } = route.params;
+  const { publicKeyMarket } = route.params;
   const [market, setMarket] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState('Comment');
   const [isLiked, setIsLiked] = useState(false);
   const { data: balanceData } = useGetBalance({ address });
   const Balance = lamportsToSol(balanceData);
+  const [loading, setLoading] = useState(false);
+
+  const { useGetMarketQuery } = useMarketProgram();
+  const { data: marketBuy, isLoading, error } = useGetMarketQuery(publicKeyMarket);
+  const { data: marketStats } = useMarketStats(
+    publicKeyMarket ? new PublicKey(publicKeyMarket) : undefined,
+  );
+  const marketDataBuy: Market = marketBuy as Market;
+  const marketStatsBuy: MarketStats = marketStats as MarketStats;
+  const answerStats = marketStatsBuy?.answerStats ?? [];
+  const { mutateBet } = useMarketProgram();
+
+  const form = useForm({
+    defaultValues: {
+      amount: 0,
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
+
+  const watchAmount = watch("amount");
+
 
   const toggleHeartColor = () => {
     setIsLiked(!isLiked);
@@ -47,17 +83,17 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
-        const response = await api.get(`/markets/${publicKey}`);
+        const response = await api.get(`/markets/${publicKeyMarket}`);
         const marketData = response.data;
 
         if (marketData) {
 
-          const statsResponse = await api.get(`/markets/${publicKey}/stats`);
-          const marketStats = statsResponse.data;
-          const totalVolume = marketStats.answerStats[0].totalVolume;
-          setMarket({ ...marketData, marketStats: { ...marketStats, totalVolume } });
+          const statsResponse = await api.get(`/markets/${publicKeyMarket}/stats`);
+          const resultMarketStats = statsResponse.data;
+          const totalVolume = resultMarketStats.answerStats[0].totalVolume;
+          setMarket({ ...marketData, marketStats: { ...resultMarketStats, totalVolume } });
         } else {
-          console.error('Market data is undefined');
+          console.error('Market data is undefined...');
         }
       } catch (error) {
         console.error('Error fetching market data:', error);
@@ -65,8 +101,30 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     };
 
     fetchMarketData();
-  }, [publicKey]);
+  }, [publicKeyMarket]);
 
+  const handlePlaceBet = async (data) => {
+    setLoading(true);
+    if (!address) return;
+
+    const betAmount = new Decimal(data.amount);
+    const betAmountInLamports = betAmount.mul(1e9).toNumber();
+
+    try {
+      console.log("Bet amount in lamports:", betAmount);
+      await mutateBet({
+        voter: address,
+        marketKey: new BN(marketDataBuy.marketKey, "hex"),
+        betAmount: new BN(betAmountInLamports),
+        answerKey: new BN(answerStats[0].key),
+      });
+      setLoading(false);
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!market) {
     return (
@@ -155,7 +213,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       ListFooterComponent={
         <>
           {/* Phần biểu đồ */}
-          <ChartScreen idMarket={publicKey} />
+          <ChartScreen idMarket={publicKeyMarket} />
           <GeminiAIButton marketTitle={market.title} marketDescription={market.description} />
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
@@ -194,9 +252,9 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
           </View>
 
           {selectedTab === 'Comment' ? (
-            <CommentMarketScreen idMarket={publicKey.toString()} />
+            <CommentMarketScreen idMarket={publicKeyMarket.toString()} />
           ) : (
-            <BettingHistory idMarket={publicKey.toString()} />
+            <BettingHistory idMarket={publicKeyMarket.toString()} />
           )}
 
           {/* Modal hiển thị chi tiết khi nhấn vào một hàng */}
@@ -265,7 +323,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                       </View>
                       <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
                     </View>
-                    <TouchableOpacity style={styles.buyButton}>
+                    <TouchableOpacity style={styles.buyButton} onPress={() => handlePlaceBet({ amount: watchAmount })}>
                       <Text style={styles.buyButtonText}>Buy</Text>
                     </TouchableOpacity>
                     <Text style={styles.networkFee}>Network fee: 0 SOL</Text>
@@ -410,7 +468,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
-  
+
   valueButtons: {
     flexDirection: 'row',
   },

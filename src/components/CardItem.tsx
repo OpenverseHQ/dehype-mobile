@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 type RootStackParamList = {
-    DetailMarket: { publicKey: string };
+    DetailMarket: { publicKeyMarket: string };
 };
 
 interface AnswerStats {
@@ -90,7 +90,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
 
     const handlePress = () => {
         upView(publicKey);
-        navigation.navigate('DetailMarket', { publicKey });
+        navigation.navigate('DetailMarket', { publicKeyMarket: publicKey });
     };
 
     const upView = async (id) => {

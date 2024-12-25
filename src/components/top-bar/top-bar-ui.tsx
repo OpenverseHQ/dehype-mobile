@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { ellipsify } from "../../utils/ellipsify";
 import { useEffect, useState } from "react";
 import * as Clipboard from "expo-clipboard";
-import { Linking } from "react-native";
+import { Linking, View } from "react-native";
 import { useCluster } from "../cluster/cluster-data-access";
 
 // My custom import 
@@ -40,10 +40,10 @@ export function TopBarWalletButton({
       <Text>
         {selectedAccount
           ? (
-            <>
+            <View>
               {/* <Text>{ellipsify()}</Text> */}
               <Text>{ellipsify(username)}</Text>
-            </>
+            </View>
           )
           : "Connect"}
       </Text>
@@ -126,7 +126,7 @@ export function TopBarWalletMenu({username,setUsername}) {
   };
 
   return (
-    <>
+    <View>
     <Menu
       visible={visible}
       onDismiss={closeMenu}
@@ -186,6 +186,6 @@ export function TopBarWalletMenu({username,setUsername}) {
         </Dialog>
       </Portal>
 
-    </>
+    </View>
   );
 }
