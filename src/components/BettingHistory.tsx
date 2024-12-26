@@ -107,7 +107,7 @@ const BettingHistory: React.FC<CommentMarketScreenProps> = ({ idMarket }) => {
                                 <Text style={styles.username}>{truncatedUsername}</Text>
                                 <Text style={styles.bought}>
                                     Bought
-                                    <Text style={{ color: '#26ad5f' }}> {item.account.tokens} SOL <Text style={{ color: '#666' }}>for</Text> {item.account.answerKey}</Text>
+                                    <Text style={{ color: '#26ad5f' }}> {item.account.tokens} SOL <Text style={{ color: '#666' }}>for</Text> {item.account.answerName}</Text>
                                     (${item.totalBet}) {timeAgo} ago
                                 </Text>
                             </View>

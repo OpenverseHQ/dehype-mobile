@@ -55,21 +55,19 @@ export function useMobileWallet() {
     },
     [authorizeSession]
   );
-  
+
   const signTransactions = useCallback(
     async <T extends Transaction | VersionedTransaction>(
-      transactions: T | T[] // Chấp nhận cả đối tượng đơn lẻ hoặc mảng
-    ): Promise<T[]> => {
-      // Nếu chỉ có một giao dịch, chuyển thành mảng
-      const transactionsArray = Array.isArray(transactions) ? transactions : [transactions];
-      
-      return await transact(async (wallet: Web3MobileWallet) => {
+      transaction: T 
+    ): Promise<T> => {
+      const signedTransaction = await transact(async (wallet: Web3MobileWallet) => {
         await authorizeSession(wallet);
-        const signedTransactions = await wallet.signTransactions({
-          transactions: transactionsArray, // Truyền vào mảng giao dịch
+        const [signedTx] = await wallet.signTransactions({
+          transactions: [transaction], 
         });
-        return signedTransactions;
+        return signedTx;
       });
+      return signedTransaction;
     },
     [authorizeSession]
   );
@@ -100,49 +98,49 @@ export function useMobileWallet() {
     },
     [authorizeSession]
   );
-// My Sign in Function 
-const MysignIn = useCallback(   
-  // La Sign in + Sign Message , nhung ko the ghep 2 ham nay truc tiep voi nhau 
-  // + API nua
-  async (signInPayload: SignInPayload): Promise<Uint8Array> => {
-    return await transact(async (wallet) => {
-     const {AccountExist , AccountCreate, handleGetAccess } = useApi() ;
+  // My Sign in Function 
+  const MysignIn = useCallback(
+    // La Sign in + Sign Message , nhung ko the ghep 2 ham nay truc tiep voi nhau 
+    // + API nua
+    async (signInPayload: SignInPayload): Promise<Uint8Array> => {
+      return await transact(async (wallet) => {
+        const { AccountExist, AccountCreate, handleGetAccess } = useApi();
 
 
-      const authResult = await authorizeSession(wallet);   // Connect wallet 
+        const authResult = await authorizeSession(wallet);   // Connect wallet 
 
-      console.log(api.defaults.baseURL)
-      const nonce = await AccountExist(authResult.publicKey);// Goi API lan 1 
+        console.log(api.defaults.baseURL)
+        const nonce = await AccountExist(authResult.publicKey);// Goi API lan 1 
 
-      var signature = new Uint8Array(10);
-      console.log("nonce : ",nonce);
-      if (nonce=="0") { // Tai khoan da dang ky
-        await handleGetAccess(authResult.publicKey) ;
-        return signature ;
-      }
-      // Confirm Sign in     OR sign up 
-      var SIGN_IN_MSG="dehype"
-      const msg = new TextEncoder().encode(`${SIGN_IN_MSG}${nonce}`);
-      console.log("Wallet : ", authResult);
-      console.log("Almost signature : ", msg);
+        var signature = new Uint8Array(10);
+        console.log("nonce : ", nonce);
+        if (nonce == "0") { // Tai khoan da dang ky
+          await handleGetAccess(authResult.publicKey);
+          return signature;
+        }
+        // Confirm Sign in     OR sign up 
+        var SIGN_IN_MSG = "dehype"
+        const msg = new TextEncoder().encode(`${SIGN_IN_MSG}${nonce}`);
+        console.log("Wallet : ", authResult);
+        console.log("Almost signature : ", msg);
 
-      const signedMessages = await wallet.signMessages({
-        addresses: [authResult.address],
-        payloads: [msg],
+        const signedMessages = await wallet.signMessages({
+          addresses: [authResult.address],
+          payloads: [msg],
+        });
+        signature = signedMessages[0];
+        console.log("Signature : ", signature);
+
+        const sig = base58.encode(signature as Uint8Array);
+        console.log("sig : ", sig);
+        // Neu co Nonce , goi API 2 de confirm va create acc
+        await AccountCreate(authResult.publicKey, nonce, sig)
+        await handleGetAccess(authResult.publicKey);
+        return signature; // Trả về signature
       });
-      signature = signedMessages[0] ;
-      console.log("Signature : ", signature) ;
-
-      const sig = base58.encode(signature as Uint8Array);
-      console.log("sig : ", sig);
-      // Neu co Nonce , goi API 2 de confirm va create acc
-      await AccountCreate(authResult.publicKey,nonce,sig)
-      await handleGetAccess(authResult.publicKey) ;
-      return signature; // Trả về signature
-    });
-  },
-  [authorizeSession]
-);
+    },
+    [authorizeSession]
+  );
 
   return useMemo(
     () => ({

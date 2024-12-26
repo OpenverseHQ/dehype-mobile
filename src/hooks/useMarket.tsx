@@ -10,6 +10,8 @@ import { useMobileWallet } from "../utils/useMobileWallet";
 import { useConnection } from "../utils/ConnectionProvider";
 import { EventTarget, Event } from "event-target-shim";
 import axiosInstance from "../lib/api";
+import { ToastAndroid } from "react-native";
+
 
 import {
     Answer,
@@ -37,6 +39,7 @@ import { Account, useAuthorization } from "../utils/useAuthorization";
 // } from "src/types/index";
 import { ComputeBudgetProgram, SendTransactionError } from "@solana/web3.js";
 import axios from "axios";
+import { View } from "react-native";
 // import { getExplorerUrl } from "@/lib/util";
 // import axiosInstance from "@/lib/api";
 export function useMarketProgram() {
@@ -259,6 +262,12 @@ export function useMarketProgram() {
         betAmount: BN;
         answerKey: BN;
     }): Promise<string> => {
+        console.log("placeBet called:", {
+            voter: voter.toString(),
+            marketKey: marketKey.toString(),
+            answerKey: answerKey.toString(),
+            timestamp: new Date().toISOString(),
+        });
         if (!publicKey) throw new Error("Wallet not connected");
         try {
             // Create the transaction to place the bet
@@ -340,28 +349,26 @@ export function useMarketProgram() {
             }
 
             try {
-                const signedTransaction = await signTransactions(transaction);
+                // Serialize the signed transaction
+                const serializedTransaction = signedTransaction.serialize();
 
-                const transactionToSerialize = Array.isArray(signedTransaction)
-                    ? signedTransaction[0]
-                    : signedTransaction;
+                // Send the raw transaction to the Solana network
+                const signature = await connection.sendRawTransaction(
+                    serializedTransaction,
+                );
 
-                if (!transactionToSerialize || !(transactionToSerialize instanceof Transaction)) {
-                    throw new Error("Expected a Transaction object.");
-                }
-
-                const serializedTransaction = transactionToSerialize.serialize();
-
-                const signature = await connection.sendRawTransaction(serializedTransaction);
+                // Confirm the transaction
                 await connection.confirmTransaction(signature, "confirmed");
 
                 console.log("Transaction Signature:", signature);
-                return signature;
+                return signature; // You might want to return the signature or the transaction
             } catch (error) {
                 if (error instanceof SendTransactionError) {
+                    // If the error is a SendTransactionError, get logs
                     console.error("Transaction logs:", await error.getLogs(connection));
                 }
 
+                console.error("Transaction Error:", error);
                 throw error;
             }
         } catch (err) {
@@ -370,8 +377,6 @@ export function useMarketProgram() {
         }
     };
 
-    // Mutation to use the placeBet function
-    // Mutation to use the placeBet function
     const useMutateBet = useMutation({
         mutationKey: ["placeBet"],
         mutationFn: placeBet,
@@ -379,30 +384,26 @@ export function useMarketProgram() {
         onSuccess: (signature) => {
             console.log("onsuccess", signature);
             const explorerUrl = getExplorerUrl(signature, "devnet");
-            //   notificationStore.pushNotification(
-            //     <>
-            //       Bet placed successfully! View the transaction on{" "}
-            //       <a
-            //         href={explorerUrl}
-            //         target="_blank"
-            //         rel="noopener noreferrer"
-            //         style={{
-            //           color: "#007bff",
-            //           fontWeight: "bold",
-            //           textDecoration: "underline",
-            //         }}
-            //       >
-            //         Explorer
-            //       </a>
-            //     </>,
-            //     {
-            //       autoRemove: true,
-            //       type: "Success",
-            //       lifetime: 15,
-            //     },
-            //   );
+            ToastAndroid.showWithGravityAndOffset(
+                "Bet placed successfully! View the transaction on Solscan",
+                ToastAndroid.LONG,
+                ToastAndroid.TOP,
+                0,
+                100
+            );
+
             queryClient.invalidateQueries({ queryKey: ["getMarketAccounts"] });
         },
+
+        onError: (error) => {
+            ToastAndroid.showWithGravityAndOffset(
+                "Failed to place bet. An error occurred while placing the bet.",
+                ToastAndroid.LONG,
+                ToastAndroid.TOP,
+                0,
+                100
+            );
+        }
     });
 
 

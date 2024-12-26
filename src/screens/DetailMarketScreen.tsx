@@ -58,23 +58,6 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const answerStats = marketStatsBuy?.answerStats ?? [];
   const { mutateBet } = useMarketProgram();
 
-  const form = useForm({
-    defaultValues: {
-      amount: 0,
-    },
-  });
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = form;
-
-  const watchAmount = watch("amount");
-
-
   const toggleHeartColor = () => {
     setIsLiked(!isLiked);
   };
@@ -104,19 +87,19 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   }, [publicKeyMarket]);
 
   const handlePlaceBet = async (data) => {
-    setLoading(true);
+    // setLoading(true);
     if (!address) return;
 
     const betAmount = new Decimal(data.amount);
     const betAmountInLamports = betAmount.mul(1e9).toNumber();
 
     try {
-      console.log("Bet amount in lamports:", betAmount);
+      console.log("Bet amount in lamports:", new BN(answerStats[1].key));
       await mutateBet({
         voter: address,
         marketKey: new BN(marketDataBuy.marketKey, "hex"),
         betAmount: new BN(betAmountInLamports),
-        answerKey: new BN(answerStats[0].key),
+        answerKey: new BN(answerStats[selectedOutcome.index].key),
       });
       setLoading(false);
     } catch (error) {
@@ -142,8 +125,9 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   }));
 
 
-  const handlePressRow = (item: any) => {
-    setSelectedOutcome(item);
+  const handlePressRow = (item: any, index) => {
+    console.log('Selected outcome:', index);
+    setSelectedOutcome({ ...item, index });
     setModalVisible(true);
   };
 
@@ -201,8 +185,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
           </View>
         </>
       }
-      renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => handlePressRow(item)}>
+      renderItem={({ item, index }) => (
+        <TouchableOpacity onPress={() => handlePressRow(item, index)}>
           <View style={styles.row}>
             <Text style={styles.rowText}>{item.option}</Text>
             <Text style={styles.rowText}>{item.percentage}</Text>
@@ -280,7 +264,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                     </View>
                     <Text style={{ flex: 1.5, fontSize: 16 }}>{selectedOutcome.percentage}%</Text>
                   </View>
-                  <View style={styles.choiceContainer}>
+                  {/* <View style={styles.choiceContainer}>
                     <TouchableOpacity
                       style={[
                         styles.choiceButton,
@@ -299,7 +283,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                     >
                       <Text style={styles.choiceText}>No</Text>
                     </TouchableOpacity>
-                  </View>
+                  </View> */}
                   <View style={styles.buyContainer}>
                     <View style={styles.buyHeader}>
                       <Text style={styles.buyTitle}>You're Buying</Text>
@@ -323,10 +307,10 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                       </View>
                       <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
                     </View>
-                    <TouchableOpacity style={styles.buyButton} onPress={() => handlePlaceBet({ amount: watchAmount })}>
+                    <TouchableOpacity style={styles.buyButton} onPress={() => handlePlaceBet({ amount: amount })}>
                       <Text style={styles.buyButtonText}>Buy</Text>
                     </TouchableOpacity>
-                    <Text style={styles.networkFee}>Network fee: 0 SOL</Text>
+                    <Text style={styles.networkFee}>Network fee: 0.00003 SOL</Text>
                   </View>
                 </View>
               </View>
