@@ -44,7 +44,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
       try {
         // Kiểm tra nếu chưa đăng nhập
         if (!selectedAccount) {
-          console.log('Chưa đăng nhập.');
+          console.log('Chưa đăng nhập...');
           return;
         }
 

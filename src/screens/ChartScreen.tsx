@@ -72,6 +72,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
           });
         });
         return updatedChartData;
+
       });
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -107,11 +108,13 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   };
 
   const filteredChartData = Object.keys(chartData)
-    .filter((key) => visibleKeys[key])
-    .reduce((acc, key) => {
-      acc[key] = chartData[key];
-      return acc;
-    }, {});
+  .filter((key) => visibleKeys[key])
+  .reduce((acc, key) => {
+    // Đảo ngược thứ tự dữ liệu trước khi truyền vào
+    acc[key] = [...chartData[key]].reverse();
+    return acc;
+  }, {});
+
 
   // const firstKey = Object.keys(chartData)[0]; // Lấy key đầu tiên
   // const firstValue = chartData[firstKey]; // Lấy giá trị của key đầu tiên

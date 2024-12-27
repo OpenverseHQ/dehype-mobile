@@ -17,6 +17,7 @@ import {
 } from "react-native-paper";
 import { AppNavigator } from "./src/navigators/AppNavigator";
 import { ClusterProvider } from "./src/components/cluster/cluster-data-access";
+import Toast from "react-native-toast-message";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ export default function App() {
           </SafeAreaView>
         </ConnectionProvider>
       </ClusterProvider>
+      <Toast/>
     </QueryClientProvider>
   );
 }

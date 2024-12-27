@@ -11,6 +11,9 @@ import { useConnection } from "../utils/ConnectionProvider";
 import { EventTarget, Event } from "event-target-shim";
 import axiosInstance from "../lib/api";
 import { ToastAndroid } from "react-native";
+import Toast from "react-native-toast-message";
+import { Linking } from 'react-native';
+import { Text } from "react-native";
 
 
 import {
@@ -384,25 +387,27 @@ export function useMarketProgram() {
         onSuccess: (signature) => {
             console.log("onsuccess", signature);
             const explorerUrl = getExplorerUrl(signature, "devnet");
-            ToastAndroid.showWithGravityAndOffset(
-                "Bet placed successfully! View the transaction on Solscan",
-                ToastAndroid.LONG,
-                ToastAndroid.TOP,
-                0,
-                100
-            );
+            Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Your bet has been placed successfully! Tap to view details.',
+                visibilityTime: 10000,
+                onPress: () => {
+                    Linking.openURL(explorerUrl).catch(err =>
+                        console.error("Failed to open URL:", err)
+                    );
+                },
+            });
 
             queryClient.invalidateQueries({ queryKey: ["getMarketAccounts"] });
         },
 
         onError: (error) => {
-            ToastAndroid.showWithGravityAndOffset(
-                "Failed to place bet. An error occurred while placing the bet.",
-                ToastAndroid.LONG,
-                ToastAndroid.TOP,
-                0,
-                100
-            );
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'An error occurred while placing your bet.',
+            });
         }
     });
 

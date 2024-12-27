@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import CommentMarketScreen from '../components/CommentMarket';
 import api from '../api/registerAccountApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { BN } from "@coral-xyz/anchor";
 import { Market, MarketStats } from '../types'
 import { useMarketProgram, useMarketStats } from '../hooks';
+import Toast from 'react-native-toast-message';
 
 
 
@@ -44,10 +45,10 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [market, setMarket] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState('Comment');
   const [isLiked, setIsLiked] = useState(false);
-  const { data: balanceData } = useGetBalance({ address });
-  const Balance = lamportsToSol(balanceData);
+  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ address }); // refetch để lấy lại số dư
+  const [Balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(false);
-
+  const [isRefreshing, setIsRefreshing] = useState(false); // Trạng thái refresh
   const { useGetMarketQuery } = useMarketProgram();
   const { data: marketBuy, isLoading, error } = useGetMarketQuery(publicKeyMarket);
   const { data: marketStats } = useMarketStats(
@@ -63,28 +64,41 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   };
 
 
-  useEffect(() => {
-    const fetchMarketData = async () => {
-      try {
-        const response = await api.get(`/markets/${publicKeyMarket}`);
-        const marketData = response.data;
+  const fetchMarketData = async () => {
+    try {
+      const response = await api.get(`/markets/${publicKeyMarket}`);
+      const marketData = response.data;
 
-        if (marketData) {
+      if (marketData) {
 
-          const statsResponse = await api.get(`/markets/${publicKeyMarket}/stats`);
-          const resultMarketStats = statsResponse.data;
-          const totalVolume = resultMarketStats.answerStats[0].totalVolume;
-          setMarket({ ...marketData, marketStats: { ...resultMarketStats, totalVolume } });
-        } else {
-          console.error('Market data is undefined...');
-        }
-      } catch (error) {
-        console.error('Error fetching market data:', error);
+        const statsResponse = await api.get(`/markets/${publicKeyMarket}/stats`);
+        const resultMarketStats = statsResponse.data;
+        const totalVolume = resultMarketStats.answerStats[0].totalVolume;
+        setMarket({ ...marketData, marketStats: { ...resultMarketStats, totalVolume } });
+      } else {
+        console.error('Market data is undefined...');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching market data:', error);
+    }
+  };
+  const onRefresh = async () => {
+    setIsRefreshing(true); 
+    await fetchMarketData();    
+    await refetchBalance();
+    setIsRefreshing(false);
+  };
 
+  useEffect(() => {
     fetchMarketData();
   }, [publicKeyMarket]);
+
+  useEffect(() => {
+    if (balanceData) {
+      const newBalance = lamportsToSol(balanceData);
+      setBalance(newBalance);  // Update balance state
+    }
+  }, [balanceData]);
 
   const handlePlaceBet = async (data) => {
     // setLoading(true);
@@ -92,16 +106,25 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
 
     const betAmount = new Decimal(data.amount);
     const betAmountInLamports = betAmount.mul(1e9).toNumber();
-
+    if (betAmount.lte(0) || betAmount.gt(Balance)) {
+      Toast.show({
+        type: 'info',
+        text1: 'Invalid Amount',
+        text2: `Please enter a valid amount between 0 and ${Balance} SOL`,
+        visibilityTime: 8000,
+      });
+      setModalVisible(false);
+      return;
+    }
     try {
-      console.log("Bet amount in lamports:", new BN(answerStats[1].key));
       await mutateBet({
         voter: address,
         marketKey: new BN(marketDataBuy.marketKey, "hex"),
         betAmount: new BN(betAmountInLamports),
         answerKey: new BN(answerStats[selectedOutcome.index].key),
       });
-      setLoading(false);
+      setModalVisible(false);
+
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
@@ -138,6 +161,10 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       data={outcomesArray}
       keyExtractor={(item) => item.option}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl
+        refreshing={isRefreshing}  
+        onRefresh={onRefresh}     
+      />}
       ListHeaderComponent={
         <>
           {/* Tiêu đề và thông tin chung */}
@@ -180,7 +207,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <Text style={styles.tableHeader}>Outcome</Text>
               <Text style={styles.tableHeader}>Percentage(%)</Text>
-              <Text style={styles.tableHeader}>Total Value</Text>
+              <Text style={styles.tableHeader}>Total Value(SOL)</Text>
             </View>
           </View>
         </>
@@ -264,26 +291,6 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                     </View>
                     <Text style={{ flex: 1.5, fontSize: 16 }}>{selectedOutcome.percentage}%</Text>
                   </View>
-                  {/* <View style={styles.choiceContainer}>
-                    <TouchableOpacity
-                      style={[
-                        styles.choiceButton,
-                        selectedChoice === 'Yes' ? styles.activeChoice : null
-                      ]}
-                      onPress={() => setSelectedChoice('Yes')}
-                    >
-                      <Text style={styles.choiceText}>Yes</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.choiceButton,
-                        selectedChoice === 'No' ? styles.activeChoice : null
-                      ]}
-                      onPress={() => setSelectedChoice('No')}
-                    >
-                      <Text style={styles.choiceText}>No</Text>
-                    </TouchableOpacity>
-                  </View> */}
                   <View style={styles.buyContainer}>
                     <View style={styles.buyHeader}>
                       <Text style={styles.buyTitle}>You're Buying</Text>
@@ -292,9 +299,13 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                         <TouchableOpacity style={styles.valueButton} onPress={() => setAmount((Balance / 2).toFixed(2))}>
                           <Text style={styles.valueButtonText}>HALF</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.valueButton} onPress={() => setAmount(Balance.toString())}>
+                        <TouchableOpacity
+                          style={styles.valueButton}
+                          onPress={() => setAmount((Balance - 0.005).toFixed(4))}
+                        >
                           <Text style={styles.valueButtonText}>MAX</Text>
                         </TouchableOpacity>
+
                       </View>
                     </View>
                     <View style={styles.buyBody}>
