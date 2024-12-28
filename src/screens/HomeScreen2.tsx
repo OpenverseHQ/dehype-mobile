@@ -39,35 +39,29 @@ const HomeScreen2 = ({ navigation, route }: any) => {
 
   const fetchMarketData = async () => {
     try {
-      if (!selectedAccount) {
-        console.log('Chưa đăng nhập...');
-        return;
-      }
-
       const marketResponse = await api.get('/markets');
       const allMarkets = marketResponse.data;
-
-      const auth = await handleGetAccess(selectedAccount.publicKey);
-
-      const favoriteResponse = await api.get('/search/details?fav=true');
-      const favoriteMarkets = favoriteResponse.data;
-
-      const favoritePublicKeys = favoriteMarkets.map((item: any) => item.publicKey);
-      setFavourites(favoritePublicKeys);
-
       const allMarketsWithStats = await Promise.all(
         allMarkets.map(async (market: any) => {
           const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
           return { ...market, marketStats: statsResponse.data };
         })
       );
-
-      const favoriteMarketsWithStats = allMarketsWithStats.filter((market: any) =>
-        favoritePublicKeys.includes(market.publicKey)
-      );
-
       setMarketData(allMarketsWithStats);
-      setMarketFavoriteData(favoriteMarketsWithStats);
+
+      console.log('selectedAccount', selectedAccount);
+      if (selectedAccount) {
+        const auth = await handleGetAccess(selectedAccount.publicKey);
+        const favoriteResponse = await api.get('/search/details?fav=true');
+        const favoriteMarkets = favoriteResponse.data;
+        const favoritePublicKeys = favoriteMarkets.map((item: any) => item.publicKey);
+        setFavourites(favoritePublicKeys);
+
+        const favoriteMarketsWithStats = allMarketsWithStats.filter((market: any) =>
+          favoritePublicKeys.includes(market.publicKey)
+        );
+        setMarketFavoriteData(favoriteMarketsWithStats);
+      }
 
     } catch (error) {
       console.error('Error fetching market data:', error);
@@ -85,35 +79,25 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     setIsRefreshing(false);
   };
 
-  const filterByCategory = (category: string) => {
-    return marketData.filter((market: any) => market.category === category);
-  };
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Header />
       <ScrollView showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={onRefresh}
-          />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
         <View style={styles.container}>
           <View><Text style={styles.text_cate}>Category</Text></View>
-          <FlatList
-            data={categories}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <Category key={item.id} id={item.id} nameCategory={item.name} coverUrl={item.coverUrl} />
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
+          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+            {categories.map((category) => (
+              <Category key={category.id} id={category.id} nameCategory={category.name} coverUrl={category.coverUrl} />
+            ))}
+          </ScrollView>
         </View>
 
         <View style={styles.tabContainer}>
+          {/* Thay đổi thứ tự hiển thị các tab */}
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
             onPress={() => setSelectedTab('All')}
@@ -145,67 +129,54 @@ const HomeScreen2 = ({ navigation, route }: any) => {
           </TouchableOpacity>
         </View>
 
-        <FlatList
-          style={{ marginLeft: 10 }}
-          data={selectedTab === 'All' ? marketData : selectedTab === 'Favorite' ? marketFavoriteData : []}
-          keyExtractor={(item) => item.publicKey}
-          renderItem={({ item }) => (
-            <CardItem
-              key={item.publicKey}
-              publicKey={item.publicKey}
-              title={item.title}
-              coverUrl={item.coverUrl}
-              participants={item.participants}
-              totalVolume={item.totalVolume}
-              marketStats={item.marketStats}
-              favourites={favourites}
-            />
+        <View style={styles.trendingSection}>
+          {selectedTab === 'All' ? (
+            <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
+              {marketData.map((market: any) => (
+                <CardItem
+                  key={market.publicKey}
+                  publicKey={market.publicKey}
+                  title={market.title}
+                  coverUrl={market.coverUrl}
+                  participants={market.participants}
+                  totalVolume={market.totalVolume}
+                  marketStats={market.marketStats}
+                  favourites={favourites}
+                />
+              ))}
+            </ScrollView>
+          ) : selectedTab === 'Trending' ? (
+            <>
+
+            </>
+          ) : selectedTab === 'Newest' ? (
+            <>
+
+            </>
+          ) : (
+            <>
+              <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
+                {marketFavoriteData.map((market: any) => (
+                  <CardItem
+                    key={market.publicKey}
+                    publicKey={market.publicKey}
+                    title={market.title}
+                    coverUrl={market.coverUrl}
+                    participants={market.participants}
+                    totalVolume={market.totalVolume}
+                    marketStats={market.marketStats}
+                    favourites={favourites}
+                  />
+                ))}
+              </ScrollView>
+            </>
           )}
-          showsVerticalScrollIndicator={false}
-        />
-
-        {selectedTab === 'Trending' && (
-          <>
-            <CategoryCollection nameCategory='Sports' />
-            <FlatList
-              data={filterByCategory('Sports')}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <CardItemTrend
-                  key={item.id}
-                  nameMarket={item.name}
-                  outcome={item.outcome}
-                  id={item.id}
-                  LikeCount={item.likes}
-                />
-              )}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-
-            />
-            <CategoryCollection nameCategory='Technology' />
-            <FlatList
-              data={filterByCategory('Technology')}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <CardItemTrend
-                  key={item.id}
-                  nameMarket={item.name}
-                  outcome={item.outcome}
-                  id={item.id}
-                  LikeCount={item.likes}
-                />
-              )}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-            />
-            {/* Add more categories similarly */}
-          </>
-        )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
 
 
 export default HomeScreen2;

@@ -8,12 +8,10 @@ import { useFocusEffect } from '@react-navigation/native';
 
 
 type RootStackParamList = {
-    DetailMarket: { publicKey: string };
+    DetailMarket: { publicKeyMarket: string };
 };
 
-interface HeaderProps { }
-
-const Header: React.FC<HeaderProps> = () => {
+const Header = () => {
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [searchResults, setSearchResults] = useState<Array<any>>([]);
@@ -56,7 +54,7 @@ const Header: React.FC<HeaderProps> = () => {
     };
     const handleOutsidePress = () => {
         setModalVisible(false);
-        Keyboard.dismiss(); 
+        Keyboard.dismiss();
     };
 
     return (
@@ -79,7 +77,7 @@ const Header: React.FC<HeaderProps> = () => {
                     <View style={styles.resultContainer}>
                         <ScrollView nestedScrollEnabled={true}>
                             {searchResults.map((item) => (
-                                <TouchableOpacity key={item.marketId.toString()} onPress={() => navigation.navigate('DetailMarket', { publicKey: item.marketId })}>
+                                <TouchableOpacity key={item.marketId.toString()} onPress={() => navigation.navigate('DetailMarket', { publicKeyMarket: item.marketId })}>
                                     <View style={styles.resultItem}>
                                         <Image source={{ uri: item.coverUrl }} style={styles.resultIcon} />
                                         <Text style={styles.resultText}>{item.title}</Text>

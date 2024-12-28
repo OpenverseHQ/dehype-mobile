@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react
 import Icon from 'react-native-vector-icons/Ionicons';
 import api from '../api/registerAccountApi';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useAuthorization } from '../utils/useAuthorization';
 
 
 type RootStackParamList = {
@@ -14,6 +15,7 @@ const LeaderboardPage = () => {
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { selectedAccount } = useAuthorization();
 
 
   const fetchLeaderboardData = async (tab) => {
@@ -39,7 +41,6 @@ const LeaderboardPage = () => {
   const formatMarketsWon = (marketsWon) => {
     return parseFloat(marketsWon).toFixed(3);
   };
-
 
   useEffect(() => {
     fetchLeaderboardData(selectedTab);

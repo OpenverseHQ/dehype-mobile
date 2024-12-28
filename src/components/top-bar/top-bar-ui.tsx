@@ -10,8 +10,8 @@ import { useCluster } from "../cluster/cluster-data-access";
 
 // My custom import 
 import useApi from "../../utils/useApi";
-import {  Dialog, Portal, TextInput } from "react-native-paper";
-import { Alert , Text } from "react-native";
+import { Dialog, Portal, TextInput } from "react-native-paper";
+import { Alert, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
@@ -24,7 +24,7 @@ export function TopBarWalletButton({
 }: {
   selectedAccount: Account | null;
   openMenu: () => void;
-  username:string|null;
+  username: string | null;
 }) {
   const { connect } = useMobileWallet();
 
@@ -40,10 +40,10 @@ export function TopBarWalletButton({
       <Text>
         {selectedAccount
           ? (
-            <View>
+            <>
               {/* <Text>{ellipsify()}</Text> */}
               <Text>{ellipsify(username)}</Text>
-            </View>
+            </>
           )
           : "Connect"}
       </Text>
@@ -64,7 +64,7 @@ export function TopBarSettingsButton() {
   );
 }
 
-export function TopBarWalletMenu({username,setUsername}) {
+export function TopBarWalletMenu({ username, setUsername }) {
   const { selectedAccount } = useAuthorization();
   const { getExplorerUrl } = useCluster();
   const [visible, setVisible] = useState(false);
@@ -73,12 +73,12 @@ export function TopBarWalletMenu({username,setUsername}) {
   const { disconnect } = useMobileWallet();
 
   // My Custom 
-  const [newUsername , setNewUsername] = useState(username) ;
+  const [newUsername, setNewUsername] = useState(username);
   const [isDialogVisible, setDialogVisible] = useState(false);
-  const {handleUpdateUserName} = useApi() ;
+  const { handleUpdateUserName } = useApi();
 
-  console.log("new user name : ",newUsername) ;
-  console.log("user name : ",username) ;
+  console.log("new user name : ", newUsername);
+  console.log("user name : ", username);
   //
 
   const copyAddressToClipboard = async () => {
@@ -107,7 +107,7 @@ export function TopBarWalletMenu({username,setUsername}) {
 
     try {
       const response = await handleUpdateUserName(newUsername);
-      if(response===null) {
+      if (response === null) {
         throw new Error("Failed to update username , don't have response");
       }
       else if (response.status === 200) {
@@ -126,48 +126,48 @@ export function TopBarWalletMenu({username,setUsername}) {
   };
 
   return (
-    <View>
-    <Menu
-      visible={visible}
-      onDismiss={closeMenu}
-      anchor={
-        <TopBarWalletButton
-          selectedAccount={selectedAccount}
-          openMenu={openMenu}
-          username={username}
+    <>
+      <Menu
+        visible={visible}
+        onDismiss={closeMenu}
+        anchor={
+          <TopBarWalletButton
+            selectedAccount={selectedAccount}
+            openMenu={openMenu}
+            username={username}
+          />
+        }
+      >
+        <Menu.Item
+          onPress={copyAddressToClipboard}
+          title="Copy address"
+          leadingIcon="content-copy"
         />
-      }
-    >
-      <Menu.Item
-        onPress={copyAddressToClipboard}
-        title="Copy address"
-        leadingIcon="content-copy"
-      />
-      <Menu.Item
-        onPress={() => setDialogVisible(true)}
-        title="Change User Name"
-        leadingIcon="open-in-new"
-      />
-      <Menu.Item
-        onPress={viewExplorer}
-        title="View Explorer"
-        leadingIcon="open-in-new"
-      />
-      <Menu.Item
-        onPress={async () => {
-          const {clearTokens} = useApi() ;
-          clearTokens() ;
-          await disconnect();
-          closeMenu();
-        }}
-        title="Disconnect"
-        leadingIcon="link-off"
-      />
-    </Menu>
+        <Menu.Item
+          onPress={() => setDialogVisible(true)}
+          title="Change User Name"
+          leadingIcon="open-in-new"
+        />
+        <Menu.Item
+          onPress={viewExplorer}
+          title="View Explorer"
+          leadingIcon="open-in-new"
+        />
+        <Menu.Item
+          onPress={async () => {
+            const { clearTokens } = useApi();
+            clearTokens();
+            await disconnect();
+            closeMenu();
+          }}
+          title="Disconnect"
+          leadingIcon="link-off"
+        />
+      </Menu>
 
 
-          {/* Hộp thoại nhập tên mới */}
-          <Portal>
+      {/* Hộp thoại nhập tên mới */}
+      <Portal>
         <Dialog visible={isDialogVisible} onDismiss={() => setDialogVisible(false)}>
           <Dialog.Title>Change Username</Dialog.Title>
           <Dialog.Content>
@@ -186,6 +186,6 @@ export function TopBarWalletMenu({username,setUsername}) {
         </Dialog>
       </Portal>
 
-    </View>
+    </>
   );
 }

@@ -2,7 +2,6 @@
 import "./src/polyfills";
 import { StyleSheet, useColorScheme } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { ConnectionProvider } from "./src/utils/ConnectionProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -75,6 +74,7 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+
 
 const styles = StyleSheet.create({
   shell: {

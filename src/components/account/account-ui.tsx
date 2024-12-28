@@ -28,8 +28,8 @@ export function AccountBalance({ address }: { address: PublicKey }) {
   return (
     <View>
       <View style={styles.accountBalance}>
-        <Text variant="titleMedium">Current Balance</Text>
-        <Text variant="displayLarge">
+        <Text style={{textAlign:'center', color:'green'}} variant="titleMedium">Current Balance</Text>
+        <Text variant="displaySmall" style={{textAlign:'center'}}>
           {query.data ? lamportsToSol(query.data) : "..."} SOL
         </Text>
       </View>

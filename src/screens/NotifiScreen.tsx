@@ -1,25 +1,62 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';  // Import icon
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ToastAndroid } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import api from '../api/registerAccountApi';
+import { useAuthorization } from '../utils/useAuthorization';
+import useApi from '../utils/useApi';
+import { formatDistanceToNow, parseISO, parse } from 'date-fns';
 
-// Dữ liệu mẫu cho Notification (dữ liệu cho New và Read)
-const newNotifications = [
-  { id: '1', title: 'New Feature Launched!', description: 'Check out our latest feature.', date: 'Sep 18', read: false },
-  { id: '2', title: 'Market Update', description: 'New market updates are available.', date: 'Sep 17', read: false },
-];
+// // Dữ liệu mẫu cho Notification (dữ liệu cho New và Read)
+// const newNotifications = [
+//   { id: '1', title: 'New Feature Launched!', description: 'Check out our latest feature.', date: 'Sep 18', read: false },
+//   { id: '2', title: 'Market Update', description: 'New market updates are available.', date: 'Sep 17', read: false },
+// ];
 
-const readNotifications = [
-  { id: '1', title: 'Your profile has been updated', description: 'You can check your profile now.', date: 'Sep 15', read: true },
-  { id: '2', title: 'Weekly Summary', description: 'Here is your weekly summary.', date: 'Sep 14', read: true },
-];
+// const readNotifications = [
+//   { id: '1', title: 'Your profile has been updated', description: 'You can check your profile now.', date: 'Sep 15', read: true },
+//   { id: '2', title: 'Weekly Summary', description: 'Here is your weekly summary.', date: 'Sep 14', read: true },
+// ];
 
 const NotificationPage = () => {
-  const [selectedTab, setSelectedTab] = useState('New');
+  const [selectedTab, setSelectedTab] = useState('All');
+  const [color, setColor] = useState('blue');
+  const [notifi, setNotifi] = useState<any[]>([]);
+  const { selectedAccount } = useAuthorization();
+  const { handleGetAccess } = useApi();
   
-  // Function để lấy dữ liệu dựa trên tab được chọn
-  const getNotificationData = () => {
-    return selectedTab === 'New' ? newNotifications : readNotifications;
+
+  // Lấy danh sách thông báo
+  const fetchNotification = async () => {
+    try {
+      if (selectedAccount) {
+        const auth = await handleGetAccess(selectedAccount.publicKey);
+        const response = await api.get('/notifications', { headers: { Authorization: `Bearer ${auth}` } });
+        setNotifi(response.data);
+      } else {
+        ToastAndroid.show('Log in to see notifications', ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách thông báo:', error);
+    }
   };
+
+  // Đánh dấu thông báo đã đọc
+  const markAsRead = async () => {
+    try {
+      const auth = await handleGetAccess(selectedAccount.publicKey);
+      await api.patch(`/notifications`);
+      setColor('#f9f9f9');
+    } catch (error) {
+      console.error('Lỗi khi đánh dấu thông báo đã đọc', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotification();
+  }, []);
+
+  // Lọc thông báo theo tab
+  const filteredNotifi = selectedTab === 'All' ? notifi : notifi.filter((item) => !item.isRead);
 
   return (
     <View style={styles.container}>
@@ -32,38 +69,56 @@ const NotificationPage = () => {
       {/* Tab Selector */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, selectedTab === 'New' && styles.activeTab]}
-          onPress={() => setSelectedTab('New')}
+          style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
+          onPress={() => setSelectedTab('All')}
         >
-          <Text style={[styles.tabText, selectedTab === 'New' && styles.activeTabText]}>New</Text>
+          <Text style={[styles.tabText, selectedTab === 'All' && styles.activeTabText]}>All</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, selectedTab === 'Read' && styles.activeTab]}
-          onPress={() => setSelectedTab('Read')}
+          style={[styles.tab, selectedTab === 'Unread' && styles.activeTab]}
+          onPress={() => setSelectedTab('Unread')}
         >
-          <Text style={[styles.tabText, selectedTab === 'Read' && styles.activeTabText]}>Read</Text>
+          <Text style={[styles.tabText, selectedTab === 'Unread' && styles.activeTabText]}>Unread</Text>
         </TouchableOpacity>
       </View>
 
       {/* Danh sách thông báo */}
       <FlatList
-        data={getNotificationData()}
+        data={filteredNotifi}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.notificationCard}>
-            <View style={styles.notificationContent}>
-              <Text style={styles.notificationTitle}>{item.title}</Text>
-              <Text style={styles.notificationDescription}>{item.description}</Text>
-            </View>
-            <Text style={styles.notificationDate}>{item.date}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const parsedTime = new Date(item.createdAt);
+          const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
+          return (
+            <TouchableOpacity
+              style={styles.notificationCard}
+              onPress={() => markAsRead()}
+            >
+              <View style={styles.notificationContent}>
+                <Text style={styles.notificationTitle}>{item.type}</Text>
+                <Text style={styles.notificationDate}>{timeAgo} ago</Text>
+              </View>
+              <View style={styles.notificationContent}>
+                <Text style={styles.notificationDescription}>{item.content}</Text>
+                <Text
+                  style={{
+                    fontSize: 20,
+                    color: item.isRead ? '#f9f9f9' : color,
+                  }}
+                >
+                  ●
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -75,10 +130,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
+    paddingVertical: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    marginBottom: 10,
   },
   headerText: {
     fontSize: 24,
@@ -87,7 +141,7 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     marginBottom: 15,
   },
   tab: {
@@ -118,6 +172,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   notificationContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 5,
   },
   notificationTitle: {

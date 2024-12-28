@@ -46,7 +46,6 @@ const UserSignedInScreen = ({ address, navigation }) => {
     "totalAmount": 0
   });
 
-  useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         // Fetch user info
@@ -67,9 +66,6 @@ const UserSignedInScreen = ({ address, navigation }) => {
         console.error("Error fetching user details:", error);
       }
     };
-
-    fetchUserDetails();
-  }, [address, navigation, balanceData]);
 
 
   const handlePress = useCallback(() => {
@@ -97,34 +93,14 @@ const UserSignedInScreen = ({ address, navigation }) => {
     }
   };
 
-  // useEffect(() => {
-  //   fetchBetHistory()
-  // }, []);
-
   useEffect(() => {
-    const bet = {
-      "user": {
-        "walletAddress": "12341431safa123",
-        "username": "dehype"
-      },
-      "bets": [
-        {
-          "marketId": "D1aphTvapSBD7ELKeMghYFFfFRkcKzqgJadP13oRgF1z",
-          "marketTitle": "Wil SoL become second BTC?",
-          "marketCoverUrl": "https://res.cloudinary.com/diwacy6yr/image/upload/v1728441530/User/default.png",
-          "totalBet": 1000,
-          "tokens": 500,
-          "answerKey": "Yes",
-          "createTime": "2021-05-20T00:00:00.000Z"
-        }
-      ]
-    }
-    setBetHistory(bet);
-    console.log(bet)
-  }, []);
+    fetchUserDetails();
+    fetchBetHistory()
+  }, [navigation, address, balanceData]);
+
 
   if (!betHistory) {
-    return <Text style={styles.noBetText}>Loading bet history...</Text>;
+    return <Text style={styles.noBetText}>Loading...</Text>;
   }
 
   return (
@@ -138,7 +114,6 @@ const UserSignedInScreen = ({ address, navigation }) => {
             onPress={() => handlePress()}
           >
             <Image
-              // source={{ uri: 'https://i.pinimg.com/564x/14/95/ab/1495ab1beb290e7816599607d9cf78b2.jpg' }}  // Thay bằng avatar người dùng
               source={{ uri: userInfo.avatarUrl }}
               style={styles.avatar}
             />
@@ -161,7 +136,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
 
       </View>
       {/* Solana Balance */}
-        <AccountDetailFeature />
+      <AccountDetailFeature />
       {/* Thẻ thống kê */}
       <View style={styles.cardContainer}>
         <TouchableOpacity
@@ -175,17 +150,17 @@ const UserSignedInScreen = ({ address, navigation }) => {
         <View style={styles.card}>
           <Icon name="trending-down-outline" size={30} color="#000" />
           <Text style={styles.cardTitle}>Profit/loss</Text>
-          <Text style={styles.cardValue}>$0.00</Text>
+          <Text style={styles.cardValue}>${userInfo.profitLoss}</Text>
         </View>
         <View style={styles.card}>
           <Icon name="bar-chart-outline" size={30} color="#000" />
           <Text style={styles.cardTitle}>Volume traded</Text>
-          <Text style={styles.cardValue}>$0.00</Text>
+          <Text style={styles.cardValue}>${userInfo.totalAmount}</Text>
         </View>
         <View style={styles.card}>
           <Icon name="checkbox-outline" size={30} color="#000" />
           <Text style={styles.cardTitle}>Markets traded</Text>
-          <Text style={styles.cardValue}>0</Text>
+          <Text style={styles.cardValue}>{userInfo.joinedMarkets}</Text>
         </View>
       </View>
 
@@ -195,30 +170,32 @@ const UserSignedInScreen = ({ address, navigation }) => {
           <Text style={styles.titleText}>Activity</Text>
         </View>
 
-        {betHistory.bets.length === 0 ? (
-          <Text style={styles.noBetText}>The user has not placed a bet yet!</Text>
-        ) : (
-          betHistory.bets.map((bet, index) => {
-            const parsedTime = new Date(bet.createTime);
-            const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
-            return (
-              <View key={index} style={styles.contentFooter}>
-                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketPublicKey })}>
-                  <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
-                  <View>
-                    <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
-                    <View style={styles.dateBet}>
-                      <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
-                      <Text style={styles.date}>{timeAgo} ago</Text>
-                    </View>
+        {betHistory.bets.map((bet, index) => {
+          const parsedTime = new Date(bet.createTime);
+          const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
+          return (
+            <View key={index} style={styles.contentFooter}>
+              <TouchableOpacity
+                style={styles.leftFooter}
+                onPress={() => navigation.navigate('DetailMarket', { publicKeyMarket: bet.marketPublicKey })}
+              >
+                <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
+                <View>
+                  <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
+                  <View style={styles.dateBet}>
+                    <Text style={styles.result}>Bought</Text>
+                    <Text style={{ color: '#26ad5f' }}>
+                      {bet.tokens}$ <Text style={{ color: '#666' }}>for</Text> {bet.answerKey}{' '}
+                    </Text>
+                    <Text style={styles.date}>{timeAgo} ago</Text>
                   </View>
-
-                </TouchableOpacity>
-              </View>
-            );
-          })
-        )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          );
+        })}
       </View>
+
     </ScrollView>
   );
 };
@@ -346,7 +323,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 0.5,
+    borderBottomWidth: 0.7,
     borderColor: '#f2f2f2',
     backgroundColor: '#fff',
   },
@@ -365,14 +342,14 @@ const styles = StyleSheet.create({
   dateBet: {
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     width: '90%',
     marginTop: 5,
   },
   date: {
     color: '#666',
-    fontSize: 12
+    fontSize: 14
   },
   noBetText: {
     textAlign: 'center',
