@@ -126,7 +126,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
         </View>
 
         <TouchableOpacity style={styles.favorite} onPress={() => {
-          navigation.navigate('Home', { screen: 'Favorite' });
+          navigation.navigate('Home');
         }}>
           <Icon name='heart-circle' size={40} color={'#777'} />
           <View style={styles.favoriteBadge}>

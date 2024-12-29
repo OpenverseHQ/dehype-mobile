@@ -4,13 +4,11 @@ import { LineChart } from "react-native-gifted-charts";
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from "react-native-popup-menu";
 
-
 const screenWidth = Dimensions.get('window').width;
 
 interface ChartMarketScreenProps {
   idMarket: string;
 }
-
 const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   const [chartData, setChartData] = useState<{ [key: string]: { value: number; date: string }[] }>({});
   const [visibleKeys, setVisibleKeys] = useState<{ [key: string]: boolean }>({});
@@ -62,13 +60,9 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
 
             // Avoid duplicate entries by comparing timestamps
             if (!updatedChartData[name].some((data) => data.date === timestamp)) {
-              updatedChartData[name].push({ value, date: timestamp });
+              updatedChartData[name].unshift({ value, date: timestamp });
             }
 
-            // Keep only the last 100 entries
-            // if (updatedChartData[name].length > 100) {
-            //   updatedChartData[name].shift();  // Remove the oldest entry if there are more than 100
-            // }
           });
         });
         return updatedChartData;
@@ -108,16 +102,12 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   };
 
   const filteredChartData = Object.keys(chartData)
-  .filter((key) => visibleKeys[key])
-  .reduce((acc, key) => {
-    // Đảo ngược thứ tự dữ liệu trước khi truyền vào
-    acc[key] = [...chartData[key]].reverse();
-    return acc;
-  }, {});
+    .filter((key) => visibleKeys[key])
+    .reduce((acc, key) => {
+      acc[key] = [...chartData[key]].reverse();
+      return acc;
+    }, {});
 
-
-  // const firstKey = Object.keys(chartData)[0]; // Lấy key đầu tiên
-  // const firstValue = chartData[firstKey]; // Lấy giá trị của key đầu tiên
 
   return (
     <MenuProvider>
@@ -155,7 +145,10 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
           rulesType='dashed'
           hideRules={grid}
           yAxisTextStyle={{ color: "gray" }}
+          yAxisSide={1}
           xAxisColor="lightgray"
+          nestedScrollEnabled={true}
+          showScrollIndicator={true}
           pointerConfig={{
             pointerStripHeight: 160,
             pointerStripColor: "lightgray",
@@ -237,7 +230,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
                 <MenuOption
                   key={index}
                   style={styles.menuOption}
-                  onSelect={() => Alert.alert(`Selected: ${key}`)} 
+                  onSelect={() => Alert.alert(`Selected: ${key}`)}
                 >
                   <Text style={styles.menuOptionText}>{key}</Text>
                   <Switch value={visibleKeys[key] ?? true} onValueChange={() => toggleKeyVisibility(key)} />
@@ -283,8 +276,8 @@ const styles = StyleSheet.create({
   menuOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%', 
-    backgroundColor: "#fff", 
+    width: '100%',
+    backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

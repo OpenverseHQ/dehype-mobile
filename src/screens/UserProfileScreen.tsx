@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import api from '../api/registerAccountApi';
 import { useAuthorization } from '../utils/useAuthorization';
+import UserSignedInScreen from './UserScreenSignedIn';
+
 
 interface UserProfileScreenProps {
     route: {
@@ -15,21 +17,23 @@ interface UserProfileScreenProps {
             address: string;
         };
     };
+    navigation: NavigationProp<RootStackParamList>;
 }
 
 type RootStackParamList = {
-    DetailMarket: { publicKey: string };
+    DetailMarket: { publicKeyMarket: string };
+    UserSignedInScreen: undefined; // Nếu UserScreen không yêu cầu tham số
 };
 
 
-const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
+const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route, navigation }) => {
     const { address } = route.params;
     console.log('Địa chỉ người dùng mới của tauuuuuuuuuuu:', address);
     const [loading, setLoading] = useState(true);
     const { selectedAccount } = useAuthorization();
     console.log('nick chinhhhh:', selectedAccount.publicKey)
     const [error, setError] = useState('');
-    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+    // const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [betHistory, setBetHistory] = useState(null);
     const { handleGetUserInfo } = useApi();
     const [userInfo, setUserInfo] = useState({
@@ -43,33 +47,37 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
 
     useEffect(() => {
         const fetchUserDataAndBetHistory = async () => {
-          try {
-            // Fetch user info
-            const userInfo = await handleGetUserInfo(address);
-            setUserInfo(userInfo);
-      
-            // Fetch bet history using user info
-            if (userInfo && userInfo.walletAddress) {
-              setLoading(true);
-              const response = await api.get(`/users/${userInfo.walletAddress}/history`);
-              const result = response.data;
-              setBetHistory(result);
-            } else {
-              console.warn("User info không chứa walletAddress. Không thể lấy lịch sử đặt cược.");
+            try {
+                // Fetch user info
+                const userInfo = await handleGetUserInfo(address);
+                setUserInfo(userInfo);
+
+                // Fetch bet history using user info
+                if (userInfo && userInfo.walletAddress) {
+                    setLoading(true);
+                    const response = await api.get(`/users/${userInfo.walletAddress}/history`);
+                    const result = response.data;
+                    setBetHistory(result);
+                } else {
+                    console.warn("User info không chứa walletAddress. Không thể lấy lịch sử đặt cược.");
+                }
+            } catch (error) {
+                console.error("Error fetching user profile or bet history:", error);
+                setError("Failed to fetch user data or bet history");
+            } finally {
+                setLoading(false);
             }
-          } catch (error) {
-            console.error("Error fetching user profile or bet history:", error);
-            setError("Failed to fetch user data or bet history");
-          } finally {
-            setLoading(false);
-          }
         };
-      
+
         fetchUserDataAndBetHistory();
-      }, [address]);
-      
+    }, [address]);
+
     if (!betHistory) {
         return <Text style={styles.noBetText}>Loading...</Text>;
+    }
+
+    if (selectedAccount !== null && selectedAccount.publicKey.toString() === address) {
+        return <UserSignedInScreen address={selectedAccount.publicKey} navigation={navigation} />
     }
     return (
         <ScrollView style={styles.container}>
@@ -82,17 +90,11 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
                     source={{ uri: userInfo.avatarUrl }}
                     style={styles.avatar}
                 />
+                <View>
+                    <Text style={styles.username}>{userInfo.username}</Text>
+                    <Text style={styles.wallet}>{userInfo.walletAddress}</Text>
+                </View>
 
-                {selectedAccount.publicKey === null || selectedAccount.publicKey.toString() !== address ? (
-                    <View>
-                        <Text style={styles.username}>{userInfo.username}</Text>
-                        <Text style={styles.wallet}>{userInfo.walletAddress}</Text>
-                    </View>
-                ) : (
-                    <View>
-                        <TopBar />
-                    </View>
-                )}
             </View>
 
 
@@ -113,7 +115,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
                 <View style={styles.card}>
                     <Icon name="bar-chart-outline" size={30} color="#000" />
                     <Text style={styles.cardTitle}>Volume traded</Text>
-                    <Text style={styles.cardValue}>{userInfo.totalAmount}</Text>
+                    <Text style={styles.cardValue}>{userInfo.totalAmount.toFixed(4)}</Text>
                 </View>
                 <View style={styles.card}>
                     <Icon name="checkbox-outline" size={30} color="#000" />
@@ -136,7 +138,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route }) => {
                         const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
                         return (
                             <View key={index} style={styles.contentFooter}>
-                                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKey: bet.marketPublicKey })}>
+                                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKeyMarket: bet.marketPublicKey })}>
                                     <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
                                     <View>
                                         <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
@@ -292,7 +294,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     leftFooter: {
-        display:'flex',
+        display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         padding: 8,

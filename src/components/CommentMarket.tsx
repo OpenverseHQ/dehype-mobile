@@ -439,7 +439,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
             <View key={reply.id} style={{ marginLeft: 20, marginTop: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => navigation.navigate('InfoUser', { address: reply.user.walletAddress })}>
                   {/* Kiểm tra avatarUrl của reply trước khi render Image */}
                   {reply.user.avatarUrl ? (
                     <Image source={{ uri: reply.user.avatarUrl }} style={styles.avatar} />
@@ -447,7 +447,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
                     <Image source={{ uri: 'https://example.com/default-avatar.png' }} style={styles.avatar} />
                   )}
                   <Text style={styles.username}> {reply.user.username.length < 10 ? reply.user.username : reply.user.username.substring(0, 10).concat("...")} </Text>
-                </View>
+                </TouchableOpacity>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Text style={styles.timeAgo}>{timeReplyAgo} ago</Text>
                   {selectedAccount && selectedAccount.publicKey && reply.user.walletAddress === selectedAccount.publicKey.toString() && (
