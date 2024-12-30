@@ -136,26 +136,26 @@ const UserSignedInScreen = ({ address, navigation }) => {
 
       </View>
       {/* Solana Balance */}
-      <AccountDetailFeature />
+      {/* <AccountDetailFeature /> */}
       {/* Thẻ thống kê */}
       <View style={styles.cardContainer}>
         <TouchableOpacity
           style={styles.card}
           onPress={() => navigation.navigate('SolonaScreen')}
         >
-          <Icon name="pulse-outline" size={30} color="#000" />
-          <Text style={styles.cardTitle}>Position Value</Text>
-          <Text style={styles.cardValue}>{Balance}</Text>
+          <Icon name="cash-outline" size={30} color="#000" />
+          <Text style={styles.cardTitle}>Current balance</Text>
+          <Text style={styles.cardValue}>{parseFloat(Balance).toFixed(2)} SOL</Text>
         </TouchableOpacity>
         <View style={styles.card}>
           <Icon name="trending-down-outline" size={30} color="#000" />
           <Text style={styles.cardTitle}>Profit/loss</Text>
-          <Text style={styles.cardValue}>${userInfo.profitLoss}</Text>
+          <Text style={styles.cardValue}>${userInfo.profitLoss} SOL</Text>
         </View>
         <View style={styles.card}>
           <Icon name="bar-chart-outline" size={30} color="#000" />
           <Text style={styles.cardTitle}>Volume traded</Text>
-          <Text style={styles.cardValue}>${userInfo.totalAmount}</Text>
+          <Text style={styles.cardValue}>${userInfo.totalAmount} SOL</Text>
         </View>
         <View style={styles.card}>
           <Icon name="checkbox-outline" size={30} color="#000" />
@@ -183,7 +183,7 @@ const UserSignedInScreen = ({ address, navigation }) => {
                 <View>
                   <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
                   <View style={styles.dateBet}>
-                    <Text style={styles.result}>Bought</Text>
+                    <Text style={styles.result}>Bought </Text>
                     <Text style={{ color: '#26ad5f' }}>
                       {bet.tokens}$ <Text style={{ color: '#666' }}>for</Text> {bet.answerKey}{' '}
                     </Text>

@@ -19,6 +19,7 @@ import { BN } from "@coral-xyz/anchor";
 import { Market, MarketStats } from '../types'
 import { useMarketProgram, useMarketStats } from '../hooks';
 import Toast from 'react-native-toast-message';
+import { MenuProvider } from 'react-native-popup-menu';
 
 
 
@@ -96,7 +97,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   useEffect(() => {
     if (balanceData) {
       const newBalance = lamportsToSol(balanceData);
-      setBalance(newBalance);  // Update balance state
+      setBalance(newBalance);  
     }
   }, [balanceData]);
 
@@ -136,7 +137,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText}>Loading....</Text>
       </View>
     );
   }
@@ -207,7 +208,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <Text style={styles.tableHeader}>Outcome</Text>
               <Text style={styles.tableHeader}>Percentage(%)</Text>
-              <Text style={styles.tableHeader}>Total Value(SOL)</Text>
+              <Text style={styles.tableHeader}>Total Value</Text>
             </View>
           </View>
         </>
@@ -222,7 +223,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
         </TouchableOpacity>
       )}
       ListFooterComponent={
-        <>
+        <View style={{ flex: 1 }}>
           {/* Phần biểu đồ */}
           <ChartScreen idMarket={publicKeyMarket} />
           <GeminiAIButton marketTitle={market.title} marketDescription={market.description} />
@@ -327,7 +328,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
               </View>
             </Modal>
           )}
-        </>
+        </View>
       }
     />
   );

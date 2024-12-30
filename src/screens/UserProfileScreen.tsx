@@ -103,19 +103,19 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route, navigation
                 <TouchableOpacity
                     style={styles.card}
                 >
-                    <Icon name="pulse-outline" size={30} color="#000" />
-                    <Text style={styles.cardTitle}>Position Value</Text>
-                    <Text style={styles.cardValue}>{ }</Text>
+                    <Icon name="cash-outline" size={30} color="#000" />
+                    <Text style={styles.cardTitle}>Current balance</Text>
+                    <Text style={styles.cardValue}>...</Text>
                 </TouchableOpacity>
                 <View style={styles.card}>
                     <Icon name="trending-down-outline" size={30} color="#000" />
                     <Text style={styles.cardTitle}>Profit/loss</Text>
-                    <Text style={styles.cardValue}>{userInfo.profitLoss}</Text>
+                    <Text style={styles.cardValue}>{userInfo.profitLoss} SOL</Text>
                 </View>
                 <View style={styles.card}>
                     <Icon name="bar-chart-outline" size={30} color="#000" />
                     <Text style={styles.cardTitle}>Volume traded</Text>
-                    <Text style={styles.cardValue}>{userInfo.totalAmount.toFixed(4)}</Text>
+                    <Text style={styles.cardValue}>{userInfo.totalAmount.toFixed(2)} SOL</Text>
                 </View>
                 <View style={styles.card}>
                     <Icon name="checkbox-outline" size={30} color="#000" />
@@ -143,7 +143,10 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route, navigation
                                     <View>
                                         <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
                                         <View style={styles.dateBet}>
-                                            <Text style={styles.result}>{`${bet.answerKey} - ${bet.tokens}$`}</Text>
+                                            <Text style={styles.result}>Bought </Text>
+                                            <Text style={{ color: '#26ad5f' }}>
+                                                {bet.tokens}$ <Text style={{ color: '#666' }}>for</Text> {bet.answerKey}{' '}
+                                            </Text>
                                             <Text style={styles.date}>{timeAgo} ago</Text>
                                         </View>
                                     </View>
@@ -309,7 +312,7 @@ const styles = StyleSheet.create({
     dateBet: {
         display: 'flex',
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         alignItems: 'center',
         width: '90%',
         marginTop: 5

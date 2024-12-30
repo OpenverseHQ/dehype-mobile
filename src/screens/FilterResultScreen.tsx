@@ -9,6 +9,7 @@ interface FilterResultScreenProps {
     route: {
         params: {
             filteredMarkets: any[];
+            // favouritesData: any[]; 
         };
     };
     navigation: any;

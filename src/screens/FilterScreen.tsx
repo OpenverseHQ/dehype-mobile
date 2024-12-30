@@ -3,6 +3,9 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-n
 import Icon from 'react-native-vector-icons/Ionicons';
 import CateFilterModal from '../components/CateFilterModal';
 import api from '../api/registerAccountApi';
+import useApi from '../utils/useApi';
+import { useAuthorization } from '../utils/useAuthorization';
+
 
 type Category = {
   id: string;
@@ -17,13 +20,15 @@ const FilterScreen = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState<Status[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency[]>([]);
   const [favourites, setfavourites] = useState(false);
+  const [favouritesData, setFavouritesData] = useState([]);
+  const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
   const [isStatusModalVisible, setStatusModalVisible] = useState(false);
   const [isCurrencyModalVisible, setCurrencyModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-
+  const { handleGetAccess } = useApi();
+  const { selectedAccount } = useAuthorization();
   const [sortOption, setSortOption] = useState('Newest');
 
   const handleApply = (categories?: Category[], status?: string[], currency?: string[]) => {
@@ -56,9 +61,13 @@ const FilterScreen = ({ navigation }: any) => {
     try {
       console.log(selectedCategories.map(category => category.id));
       const categoryQuery = selectedCategories.map(category => category.id).join(',');
-      // const queryParams = `c=${categoryQuery}&fav=${favourites}`;
-      const queryParams = `c=${categoryQuery}`;
-      
+      let queryParams = `c=${categoryQuery}`;
+
+      if (selectedAccount !== null && favourites === true) {
+        queryParams += `&fav=${favourites}`;
+        const auth = await handleGetAccess(selectedAccount.publicKey);
+      }
+
       const response = await api.get(`/search/details?${queryParams}`);
       const markets = response.data;
 
@@ -68,7 +77,38 @@ const FilterScreen = ({ navigation }: any) => {
           return { ...market, marketStats: statsResponse.data };
         })
       );
-      return marketsWithStats;
+      const sortedMarkets = marketsWithStats.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();  
+        const dateB = new Date(b.createdAt).getTime(); 
+      
+        if (sortOption === 'Newest') {
+          return dateB - dateA; 
+        } else {
+          return dateA - dateB; 
+        }
+      });
+      
+
+      return sortedMarkets;
+      // return marketsWithStats;
+
+      // if (selectedAccount) {
+      //   const auth = await handleGetAccess(selectedAccount.publicKey);
+      //   const favoriteResponse = await api.get('/search/details?fav=true');
+      //   const favoriteMarkets = favoriteResponse.data;
+      //   const favoritePublicKeys = favoriteMarkets.map((item: any) => item.publicKey);
+      //   setFavouritesData(favoritePublicKeys);
+
+      //   const favoriteMarketsWithStats = marketsWithStats.filter((market: any) =>
+      //     favoritePublicKeys.includes(market.publicKey)
+      //   );
+      //   setMarketFavoriteData(favoriteMarketsWithStats);
+      //   return { marketFavoriteData: favoriteMarketsWithStats, favouritesData: favoritePublicKeys };
+      // }
+      // else {
+      //   setMarketFavoriteData(marketsWithStats);
+      //   return { marketFavoriteData: marketsWithStats, favouritesData: [] };
+      // }
     } catch (error) {
       console.error('Lỗi khi fetch dữ liệu từ API:', error);
       return [];
@@ -203,8 +243,8 @@ const FilterScreen = ({ navigation }: any) => {
       <TouchableOpacity
         style={styles.showMarketsButton}
         onPress={async () => {
-          setLoading(true); 
-          setError(null); 
+          setLoading(true);
+          setError(null);
 
           try {
             const filteredMarkets = await fetchFilteredMarkets();

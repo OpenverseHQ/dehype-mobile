@@ -49,7 +49,7 @@ const GeminiAIButton: React.FC<GeminiAIButtonProps> = ({ marketTitle, marketDesc
           <View style={styles.iconWrapper}>
             <Text style={styles.icon}>💡</Text>
           </View>
-          <Text style={styles.summaryHeader}>Here is your summary:</Text>
+          {/* <Text style={styles.summaryHeader}>Here is your summary:</Text> */}
           <Text style={styles.summaryText}>{summary}</Text>
         </View>
       )}

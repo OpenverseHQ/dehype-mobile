@@ -89,7 +89,7 @@ const LeaderboardPage = () => {
       ) : (
         <FlatList
           data={leaderboardData}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.walletAddress.toString()} 
           renderItem={({ item, index }) => (
             <TouchableOpacity style={styles.leaderboardCard} onPress={() => navigation.navigate('InfoUser', { address: item.walletAddress })}>
               {index < 3 && (

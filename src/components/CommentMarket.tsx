@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Switch, Image, ActivityIndicator, Alert, ToastAndroid } from 'react-native';
 import api from '../api/registerAccountApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -149,18 +149,15 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const { selectedAccount } = useAuthorization();
   const handleAddComment = async () => {
     if (selectedAccount == null) {
-      const showAlert = () => {
-        Alert.alert(
-          "",
-          "You need to log in to comment",
-          [{ text: "OK", onPress: () => console.log("OK Pressed") }]
-        );
-      };
-      showAlert();
+      ToastAndroid.show('You need to log in to perform this function', ToastAndroid.LONG);
       return;
     }
-    await handleGetAccess(selectedAccount.publicKey);
+    if (!newComment.trim()) {
+      ToastAndroid.show('Comment cannot be empty', ToastAndroid.LONG);
+      return;
+    }
 
+    await handleGetAccess(selectedAccount.publicKey);
     const newCommentObj = {
       content: newComment,
     };
@@ -183,6 +180,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
         setComments(prevComments => [newCommentFormatted, ...prevComments]);
         setNewComment('');
+        ToastAndroid.show('Comment added successfully', ToastAndroid.LONG);
       } else {
         console.error('Error saving comment:', response.status, response.data);
       }
@@ -218,6 +216,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
             return comment;
           }).filter(Boolean) as Comment[]
         );
+        ToastAndroid.show('Comment deleted successfully', ToastAndroid.LONG);
       } else {
         console.error('Error deleting comment:', response.status, response.data);
       }
@@ -231,6 +230,11 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
     if (selectedAccount == null) {
       Alert.alert('You need to log in to perform this function')
     }
+    if (!updatedText.trim()) {
+      ToastAndroid.show('Comment cannot be empty', ToastAndroid.LONG);
+      return;
+    }
+
     await handleGetAccess(selectedAccount.publicKey); // Get access & refresh
     try {
       const targetId = replyId || parentId;
@@ -262,6 +266,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         );
         setEditCommentId(null);
         setEditReplyId(null);
+        ToastAndroid.show('Comment updated successfully', ToastAndroid.LONG);
       } else {
         console.error('Error updating comment:', response.status, response.data);
       }
@@ -297,6 +302,10 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
   const handlePostReply = async (commentId: string) => {
     await handleGetAccess(selectedAccount.publicKey);
     const replyContent = replyText[commentId];
+    if (!replyContent || !replyContent.trim()) {
+      ToastAndroid.show('Reply cannot be empty', ToastAndroid.LONG);
+      return;
+    }
     const newReplyObj = {
       content: replyContent,
     };
@@ -315,7 +324,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
           updateAt: new Date(response.data.updatedAt).toLocaleString(),
           user: {
             walletAddress: response.data.user.walletAddress,
-            username: response_user.data.walletAddress || 'Anonymous',
+            username: response_user.data.username || 'Anonymous',
             avatarUrl: response_user.data.avatarUrl,
           },
         };
@@ -332,6 +341,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
         // Xóa nội dung reply sau khi gửi thành công
         handleCancelReply(commentId);
+        ToastAndroid.show('Reply added successfully', ToastAndroid.LONG);
       } else {
         console.error('Error saving reply:', response.status, response.data);
       }
@@ -370,7 +380,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
                   <MenuOption onSelect={() => handleEditPress(item.id, item.text)}>
                     <View style={styles.option}>
                       <Icon name="update" size={20} />
-                      <Text style={styles.menuText}>Update</Text>
+                      <Text style={styles.menuText}>Edit</Text>
                     </View>
                   </MenuOption>
                   <MenuOption onSelect={() => handleDeleteComment(item.id)}>
@@ -459,7 +469,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
                         <MenuOption onSelect={() => handleEditPress(item.id, reply.comment, reply.id)}>
                           <View style={styles.option}>
                             <Icon name="update" size={20} />
-                            <Text style={styles.menuText}>Update</Text>
+                            <Text style={styles.menuText}>Edit</Text>
                           </View>
                         </MenuOption>
                         <MenuOption onSelect={() => handleDeleteComment(item.id, reply.id)}>
@@ -502,7 +512,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
 
 
   return (
-    <MenuProvider style={styles.container}>
+    <View style={styles.container}>
       <TextInput
         style={styles.input}
         value={newComment}
@@ -529,7 +539,7 @@ const CommentMarketScreen: React.FC<CommentMarketScreenProps> = ({ idMarket }) =
         />
       </View>
 
-    </MenuProvider>
+    </View>
   );
 };
 

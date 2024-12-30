@@ -39,7 +39,6 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
         const updatedChartData = { ...prevChartData };
 
         result.forEach((item: any) => {
-
           const timestamp = new Date(item.timestamp).toLocaleString("vi-VN", {
             year: "numeric",
             month: "2-digit",
@@ -60,19 +59,20 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
 
             // Avoid duplicate entries by comparing timestamps
             if (!updatedChartData[name].some((data) => data.date === timestamp)) {
-              updatedChartData[name].unshift({ value, date: timestamp });
+              if (isFirstTimeConnect) {
+                updatedChartData[name].unshift({ value, date: timestamp });
+              } else {
+                updatedChartData[name].push({ value, date: timestamp });
+              }
             }
-
           });
         });
         return updatedChartData;
-
       });
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-
 
 
   useEffect(() => {
@@ -104,13 +104,13 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
   const filteredChartData = Object.keys(chartData)
     .filter((key) => visibleKeys[key])
     .reduce((acc, key) => {
-      acc[key] = [...chartData[key]].reverse();
+      acc[key] = [...chartData[key]];
       return acc;
     }, {});
 
 
   return (
-    <MenuProvider>
+    <View>
 
       <View
         style={{
@@ -220,7 +220,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
         />
 
 
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: 10 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginRight: 10, flex: 1 }}>
           <Menu style={{ marginRight: 10 }}>
             <MenuTrigger>
               <Icon size={18} name="options-outline" />
@@ -258,7 +258,7 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
           </Menu>
         </View>
       </View>
-    </MenuProvider>
+    </View>
 
   );
 };

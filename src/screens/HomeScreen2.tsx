@@ -22,7 +22,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [favourites, setFavourites] = useState([]);
-  const [selectedTab, setSelectedTab] = useState('All');
+  const [selectedTab, setSelectedTab] = useState('Trending');
   const { selectedAccount } = useAuthorization();
   const { handleGetAccess } = useApi();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -61,7 +61,11 @@ const HomeScreen2 = ({ navigation, route }: any) => {
           favoritePublicKeys.includes(market.publicKey)
         );
         setMarketFavoriteData(favoriteMarketsWithStats);
+      } else {
+        setMarketFavoriteData(allMarketsWithStats);
+        setFavourites([]);
       }
+
 
     } catch (error) {
       console.error('Error fetching market data:', error);
@@ -71,12 +75,16 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   useEffect(() => {
     fetchCategories();
     fetchMarketData();
-  }, [navigation]);
+  }, [navigation, selectedAccount]);
 
   const onRefresh = async () => {
     setIsRefreshing(true);
     await fetchMarketData();
     setIsRefreshing(false);
+  };
+
+  const filterByCategory = (category: string) => {
+    return marketData.filter((market: any) => market.category === category);
   };
 
   return (
@@ -98,12 +106,12 @@ const HomeScreen2 = ({ navigation, route }: any) => {
 
         <View style={styles.tabContainer}>
           {/* Thay đổi thứ tự hiển thị các tab */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
             onPress={() => setSelectedTab('All')}
-          >
-            <Text style={styles.tabText}>All</Text>
-          </TouchableOpacity>
+          > */}
+            {/* <Text style={styles.tabText}>All</Text>
+          </TouchableOpacity> */}
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'Trending' && styles.activeTab]}
             onPress={() => setSelectedTab('Trending')}
@@ -130,7 +138,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
         </View>
 
         <View style={styles.trendingSection}>
-          {selectedTab === 'All' ? (
+          {selectedTab === 'Trending' ? (
             <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
               {marketData.map((market: any) => (
                 <CardItem
@@ -145,7 +153,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                 />
               ))}
             </ScrollView>
-          ) : selectedTab === 'Trending' ? (
+          ) : selectedTab === 'All' ? (
             <>
 
             </>

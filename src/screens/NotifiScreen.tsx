@@ -1,21 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ToastAndroid } from 'react-native';
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, ToastAndroid, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import api from '../api/registerAccountApi';
 import { useAuthorization } from '../utils/useAuthorization';
 import useApi from '../utils/useApi';
 import { formatDistanceToNow, parseISO, parse } from 'date-fns';
-
-// // Dữ liệu mẫu cho Notification (dữ liệu cho New và Read)
-// const newNotifications = [
-//   { id: '1', title: 'New Feature Launched!', description: 'Check out our latest feature.', date: 'Sep 18', read: false },
-//   { id: '2', title: 'Market Update', description: 'New market updates are available.', date: 'Sep 17', read: false },
-// ];
-
-// const readNotifications = [
-//   { id: '1', title: 'Your profile has been updated', description: 'You can check your profile now.', date: 'Sep 15', read: true },
-//   { id: '2', title: 'Weekly Summary', description: 'Here is your weekly summary.', date: 'Sep 14', read: true },
-// ];
 
 const NotificationPage = () => {
   const [selectedTab, setSelectedTab] = useState('All');
@@ -23,7 +12,8 @@ const NotificationPage = () => {
   const [notifi, setNotifi] = useState<any[]>([]);
   const { selectedAccount } = useAuthorization();
   const { handleGetAccess } = useApi();
-  
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
 
   // Lấy danh sách thông báo
   const fetchNotification = async () => {
@@ -67,7 +57,7 @@ const NotificationPage = () => {
       </View>
 
       {/* Tab Selector */}
-      <View style={styles.tabContainer}>
+      {/* <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
           onPress={() => setSelectedTab('All')}
@@ -81,22 +71,34 @@ const NotificationPage = () => {
         >
           <Text style={[styles.tabText, selectedTab === 'Unread' && styles.activeTabText]}>Unread</Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       {/* Danh sách thông báo */}
       <FlatList
         data={filteredNotifi}
         keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={async () => {
+              setIsRefreshing(true);
+              await fetchNotification();
+              setIsRefreshing(false);
+            }}
+          />
+        }
         renderItem={({ item }) => {
           const parsedTime = new Date(item.createdAt);
           const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
+          const title = item.type === 'end_market' ? 'Market has ended' : 'New market';
+
           return (
             <TouchableOpacity
               style={styles.notificationCard}
               onPress={() => markAsRead()}
             >
               <View style={styles.notificationContent}>
-                <Text style={styles.notificationTitle}>{item.type}</Text>
+                <Text style={styles.notificationTitle}>{title}</Text>
                 <Text style={styles.notificationDate}>{timeAgo} ago</Text>
               </View>
               <View style={styles.notificationContent}>
@@ -131,7 +133,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 5,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
+    marginBottom: 10,
     borderBottomColor: '#eee',
   },
   headerText: {

@@ -1,4 +1,4 @@
-import { Text, StyleSheet, View, TouchableOpacity, Image } from 'react-native';
+import { Text, StyleSheet, View, TouchableOpacity, Image, ToastAndroid } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -74,16 +74,18 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
     const toggleHeartColor = async () => {
         console.log(selectedAccount)
         if (!selectedAccount) {
-            console.log("User is not logged in. Cannot like or unlike.");
+            ToastAndroid.show('Please login to like', ToastAndroid.LONG);
             return;
         }
 
         if (isLiked) {
             removeLike(publicKey);
             setIsLiked(false);
+            ToastAndroid.show('Removed from favourites', ToastAndroid.LONG);
         } else {
             addLike(publicKey);
             setIsLiked(true);
+            ToastAndroid.show('Added to favourites', ToastAndroid.LONG);
         }
     };
 
@@ -136,7 +138,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
                 <Text style={styles.footerText}> Ended Sep 27 | {marketStats.answerStats.length} outcomes</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 12 }}><Icon size={14} name='account-multiple' /> {participants}</Text>
-                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon size={14} name='poll' /> {totalVolume}</Text>
+                    <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon size={14} name='poll' /> {totalVolume.toFixed(2)}</Text>
                     <Image source={{ uri: coverUrl }} style={{ width: 14, height: 14, marginLeft: 8 }} />
                 </View>
             </View>

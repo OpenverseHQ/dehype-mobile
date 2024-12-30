@@ -8,6 +8,8 @@ import {
   DarkTheme as NavigationDarkTheme,
   DefaultTheme as NavigationDefaultTheme,
 } from "@react-navigation/native";
+import { Menu, MenuOptions, MenuOption, MenuTrigger, MenuProvider } from 'react-native-popup-menu';
+
 import {
   PaperProvider,
   MD3DarkTheme,
@@ -47,7 +49,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ClusterProvider>
         <ConnectionProvider config={{ commitment: "processed" }}>
-          <SafeAreaView
+          <MenuProvider
             style={[
               styles.shell,
               {
@@ -67,7 +69,7 @@ export default function App() {
             >
               <AppNavigator />
             </PaperProvider>
-          </SafeAreaView>
+          </MenuProvider>
         </ConnectionProvider>
       </ClusterProvider>
       <Toast/>
@@ -79,5 +81,6 @@ export default function App() {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
+    marginTop: 40
   },
 });
