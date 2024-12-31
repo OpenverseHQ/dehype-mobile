@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TextInput, Image, TouchableOpacity , ActivityIndicator  } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TextInput, RefreshControl, TouchableOpacity , ActivityIndicator  } from 'react-native';
 import BlogItem from '../components/BlogItem';
 import Icon from 'react-native-vector-icons/Ionicons'; 
 import useApi from '../utils/useApi';
@@ -11,6 +11,7 @@ const BlogsApiScreen = ({navigation}) => {
   const [loading, setLoading] = useState(false);
   const [noBlogToFetch, setNoBlogToFetch] = useState(false);
   const {GetBlogs} = useApi() ;
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
 
   const PageSize = 3 ;
@@ -28,7 +29,7 @@ const BlogsApiScreen = ({navigation}) => {
       setBlogs(prevBlogs => [...prevBlogs, ...data]);
       setPage(prevPage => prevPage + 1);
     } catch (error) {
-      console.error("Error loading blogs:", error);
+      console.error("Error loading blogs:...", error);
     } finally {
       setLoading(false);
     }
@@ -61,6 +62,16 @@ const BlogsApiScreen = ({navigation}) => {
       {/* Blog List */}
       <FlatList
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={async () => {
+              setIsRefreshing(true);
+              await fetchBlogs();
+              setIsRefreshing(false);
+            }}
+          />
+        }
         data={blogs}
         keyExtractor={(item) => item.id}
         renderItem={

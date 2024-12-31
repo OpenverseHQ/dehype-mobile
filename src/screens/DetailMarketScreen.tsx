@@ -20,6 +20,7 @@ import { Market, MarketStats } from '../types'
 import { useMarketProgram, useMarketStats } from '../hooks';
 import Toast from 'react-native-toast-message';
 import { MenuProvider } from 'react-native-popup-menu';
+import { format } from 'date-fns';
 
 
 
@@ -154,7 +155,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     setSelectedOutcome({ ...item, index });
     setModalVisible(true);
   };
-
+  const startDate = new Date(market.createdAt);
+  const endDate = new Date(market.endTime);
 
   return (
     <FlatList
@@ -181,7 +183,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
               </Marquee>
             </View>
             <Text style={styles.subtitle}>
-              Started: {market.start_date} | Ends: {market.end_date} | Total Volume: {market.marketStats.totalVolume} SOL
+              Started: {format(startDate, 'MMM dd, yyyy')} | Ends: {format(endDate, 'MMM dd, yyyy')} | Total Volume: {market.marketStats.totalVolume} SOL
             </Text>
           </View>
           {/* Creater */}
@@ -190,7 +192,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
               <Image style={{ width: 28, height: 28 }} source={require('../../assets/Male_User.png')} />
               <View style={{ margin: 5 }}>
                 <Text style={{ fontSize: 10, color: '#666' }}>Creator</Text>
-                <Text style={{ fontSize: 12 }}>Thang Tran</Text>
+                <Text style={{ fontSize: 12 }}>{market.creator.toString().slice(0, 12)}...</Text>
               </View>
             </View>
             <Image style={{ width: 20, height: 20, marginRight: 10 }} source={{ uri: market.coverUrl }} />

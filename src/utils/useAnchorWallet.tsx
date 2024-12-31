@@ -16,8 +16,8 @@ export interface AnchorWallet {
     transaction: T
   ): Promise<T>;
   signAllTransactions<T extends Transaction | VersionedTransaction>(
-    transactions: T[]
-  ): Promise<T[]>;
+    transactions: T
+  ): Promise<T>;
 }
 
 export function useAnchorWallet(): AnchorWallet | undefined {
@@ -32,13 +32,13 @@ export function useAnchorWallet(): AnchorWallet | undefined {
       signTransaction: async <T extends Transaction | VersionedTransaction>(
         transaction: T
       ) => {
-        const signedTransactions = await mobileWallet.signTransactions([
+        const signedTransactions = await mobileWallet.signTransactions(
           transaction,
-        ]);
-        return signedTransactions[0];
+        );
+        return signedTransactions;
       },
       signAllTransactions: async <T extends Transaction | VersionedTransaction>(
-        transactions: T[]
+        transactions: T
       ) => {
         return await mobileWallet.signTransactions(transactions);
       },

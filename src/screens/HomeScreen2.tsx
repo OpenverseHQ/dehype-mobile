@@ -41,6 +41,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
     try {
       const marketResponse = await api.get('/markets');
       const allMarkets = marketResponse.data;
+      console.log('allMarkets', allMarkets);
       const allMarketsWithStats = await Promise.all(
         allMarkets.map(async (market: any) => {
           const statsResponse = await api.get(`/markets/${market.publicKey}/stats`);
@@ -75,7 +76,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
   useEffect(() => {
     fetchCategories();
     fetchMarketData();
-  }, [navigation, selectedAccount]);
+  }, []);
 
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -145,6 +146,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                   key={market.publicKey}
                   publicKey={market.publicKey}
                   title={market.title}
+                  startDate={market.createdAt}
                   coverUrl={market.coverUrl}
                   participants={market.participants}
                   totalVolume={market.totalVolume}
@@ -169,6 +171,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                     key={market.publicKey}
                     publicKey={market.publicKey}
                     title={market.title}
+                    startDate={market.createdAt}
                     coverUrl={market.coverUrl}
                     participants={market.participants}
                     totalVolume={market.totalVolume}

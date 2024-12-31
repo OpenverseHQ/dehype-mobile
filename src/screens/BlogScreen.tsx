@@ -6,6 +6,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 const BlogsScreen = ({navigation}) => {
   const [blogs, setBlogs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 2000);
+  };
 
   useEffect(() => {
     // Dữ liệu giả định

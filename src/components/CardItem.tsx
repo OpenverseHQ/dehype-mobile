@@ -5,7 +5,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import api from '../api/registerAccountApi';
 import { useAuthorization } from '../utils/useAuthorization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { format } from 'date-fns';
 
 type RootStackParamList = {
     DetailMarket: { publicKeyMarket: string };
@@ -25,6 +25,7 @@ interface MarketStats {
 interface CardItems {
     publicKey: string;
     title: string;
+    startDate: string;
     coverUrl: string;
     participants: number;
     totalVolume: number;
@@ -32,7 +33,7 @@ interface CardItems {
     favourites: any
 }
 
-const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participants, totalVolume, marketStats, favourites }) => {
+const CardItem: React.FC<CardItems> = ({ publicKey, title, startDate, coverUrl, participants, totalVolume, marketStats, favourites }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [localFavourites, setLocalFavourites] = useState<any[]>(favourites || []);
     const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -104,6 +105,9 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
         }
     };
 
+    const startTime = new Date(startDate);
+
+
     return (
         <TouchableOpacity style={styles.card} onPress={handlePress}>
             <View style={styles.cardHeader}>
@@ -135,7 +139,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, coverUrl, participant
                 ))}
             </View>
             <View style={styles.footer}>
-                <Text style={styles.footerText}> Ended Sep 27 | {marketStats.answerStats.length} outcomes</Text>
+                <Text style={styles.footerText}>Started {format(startTime, 'MMM dd, yyyy')} | {marketStats.answerStats.length} outcomes</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 12 }}><Icon size={14} name='account-multiple' /> {participants}</Text>
                     <Text style={{ fontSize: 12, marginLeft: 8 }}><Icon size={14} name='poll' /> {totalVolume.toFixed(2)}</Text>

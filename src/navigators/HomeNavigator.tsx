@@ -29,24 +29,26 @@ import UploadImageScreen from "../screens/UploadImageScreen";
 import ChartScreen from "../screens/ChartScreen";
 import GeminiChatScreen from "../screens/GeminiChatScreen";
 import UserProfileScreen from "../screens/UserProfileScreen";
+import { useAuthorization } from '../utils/useAuthorization';
+
 
 const Stack = createNativeStackNavigator();
 const UserStack = () => (
   <Stack.Navigator>
-    <Stack.Screen name="UserScreen" component={UserScreen} 
-    options={{ headerShown: false }}
+    <Stack.Screen name="UserScreen" component={UserScreen}
+      options={{ headerShown: false }}
     />
-    <Stack.Screen name="UserSignedInScreen" component ={UserSignedInScreen} 
+    <Stack.Screen name="UserSignedInScreen" component={UserSignedInScreen}
       options={({ navigation }) => ({
         headerShown: false
       })}
     />
-    <Stack.Screen name="SolonaScreen" component={HomeScreen} 
+    <Stack.Screen name="SolonaScreen" component={HomeScreen}
       options={({ navigation }) => ({
         headerShown: false
       })}
     />
-        <Stack.Screen name="UploadImageScreen" component={UploadImageScreen} 
+    <Stack.Screen name="UploadImageScreen" component={UploadImageScreen}
       options={({ navigation }) => ({
         headerShown: false
       })}
@@ -57,10 +59,10 @@ const UserStack = () => (
 const Stack2 = createNativeStackNavigator();
 const BlogStack = () => (
   <Stack2.Navigator>
-    <Stack2.Screen name="BlogsScreen" component={BlogsApiScreen} 
-    options={{ headerShown: false }}
+    <Stack2.Screen name="BlogsScreen" component={BlogsApiScreen}
+      options={{ headerShown: false }}
     />
-    <Stack2.Screen name="BlogDetailScreen" component={BlogDetailScreen} 
+    <Stack2.Screen name="BlogDetailScreen" component={BlogDetailScreen}
       options={({ navigation }) => ({
         headerShown: false
       })}
@@ -73,11 +75,13 @@ const Tab2 = createBottomTabNavigator();
 
 function MyTabs() {
   const theme = useTheme();
+  const { selectedAccount } = useAuthorization();
+  
   return (
     <Tab2.Navigator
       screenOptions={({ route }) => ({
         // header: () => <TopBar />,
-        headerShown:false,
+        headerShown: false,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
@@ -118,9 +122,12 @@ function MyTabs() {
       <Tab2.Screen name="Home" component={HomeScreen2} />
       <Tab2.Screen name="Leaderboard" component={LeaderboardScreen} />
       <Tab2.Screen name="Blogs" component={BlogStack} />
-      <Tab2.Screen name="Notification" component={NotifiScreen} />
+      {selectedAccount && (
+        <Tab2.Screen name="Notification" component={NotifiScreen} />
+      )}
+      {/* <Tab2.Screen name="Notification" component={NotifiScreen} /> */}
       <Tab2.Screen name="User" component={UserStack} />
-      {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */} 
+      {/* <Tab2.Screen name="Signature" component={SignatureScreen} /> */}
       {/* <Tab2.Screen name="Chart" component ={ChartScreen} />
       <Tab2.Screen name="Gemini" component ={GeminiChatScreen} /> */}
     </Tab2.Navigator>
@@ -131,13 +138,13 @@ function MyTabs() {
 const Stack3 = createNativeStackNavigator();
 export default function HomeNavigator() {
   return (
-      <Stack3.Navigator initialRouteName="MyTabs">
-        <Stack3.Screen name="MyTabs" component={MyTabs} options={{ headerShown: false }} />
-        <Stack3.Screen name="Category" component={CategoryScreen} options={{ headerShown: false }} />
-        <Stack3.Screen name="Filter" component={FilterScreen} options={{ headerShown: false }} />
-        <Stack3.Screen name="FilterResult" component={FilterResultScreen} options={{ headerShown: false }} />
-        <Stack3.Screen name="DetailMarket" component={DetailMarketScreen} options={{ headerShown: false }} />
-        <Stack3.Screen name="InfoUser" component={UserProfileScreen} options={{ headerShown: false }} />
-      </Stack3.Navigator>
+    <Stack3.Navigator initialRouteName="MyTabs">
+      <Stack3.Screen name="MyTabs" component={MyTabs} options={{ headerShown: false }} />
+      <Stack3.Screen name="Category" component={CategoryScreen} options={{ headerShown: false }} />
+      <Stack3.Screen name="Filter" component={FilterScreen} options={{ headerShown: false }} />
+      <Stack3.Screen name="FilterResult" component={FilterResultScreen} options={{ headerShown: false }} />
+      <Stack3.Screen name="DetailMarket" component={DetailMarketScreen} options={{ headerShown: false }} />
+      <Stack3.Screen name="InfoUser" component={UserProfileScreen} options={{ headerShown: false }} />
+    </Stack3.Navigator>
   );
 }

@@ -28,7 +28,7 @@ const LeaderboardPage = () => {
       const response = await api.get(endpoint);
       setLeaderboardData(response.data);
     } catch (error) {
-      console.error('Error fetching leaderboard data:', error);
+      console.error('Error fetching leaderboard data:..', error);
     } finally {
       setLoading(false);
     }

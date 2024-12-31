@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import api from '../api/registerAccountApi';
 import { useAuthorization } from '../utils/useAuthorization';
+import useApi from '../utils/useApi';
 
 
 // Định nghĩa kiểu dữ liệu cho route và navigation
@@ -25,10 +26,13 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
     const [favourites, setFavourites] = useState([]);
     const { selectedAccount } = useAuthorization();
     const [marketFavoriteData, setMarketFavoriteData] = useState<any[]>([]);
+    const { handleGetAccess } = useApi();
+    
 
     useEffect(() => {
         const fetchMarketFavorite = async () => {
           try {
+            // const auth = await handleGetAccess(selectedAccount.publicKey);
             const response = await api.get('/search/details?fav=true');
             const markets = response.data;
             setFavourites(response.data.map(item => item.publicKey));
@@ -65,9 +69,10 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
                 })
             );
             setMarketData(marketsWithStats);
+            console.log('marketData', marketData);
             setLoading(false);
         } catch (error) {
-            console.error('Lỗi khi lấy dữ liệu:', error);
+            console.error('Lỗi khi lấy dữ liệu:.', error);
         }
     };
 
@@ -94,6 +99,7 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ route, navigation }) =>
                             key={market.publicKey}
                             publicKey={market.publicKey}
                             title={market.title}
+                            startDate={market.createAt}
                             coverUrl={market.coverUrl}
                             participants={market.participants}
                             totalVolume={market.totalVolume}

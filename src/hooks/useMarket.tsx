@@ -56,7 +56,7 @@ export function useMarketProgram() {
     const { connection } = useConnection();
     const program = new Program(
         marketIDL as Idl,
-        "7fKSTrQLMk4K8svWTZ6dpD7mFVVfQdZ2TUb9MfqfAUWK",
+        "9FXu3CrZNKgJPnJNkR9K2R5TK6vF1bwHrxcZwGprG5gT",
         provider,
     );
     const queryClient = useQueryClient();
