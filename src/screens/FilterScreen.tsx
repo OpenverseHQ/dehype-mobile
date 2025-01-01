@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch, Alert, ToastAndroid } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CateFilterModal from '../components/CateFilterModal';
 import api from '../api/registerAccountApi';
 import useApi from '../utils/useApi';
 import { useAuthorization } from '../utils/useAuthorization';
+import Toast from 'react-native-toast-message';
 
 
 type Category = {
@@ -61,7 +62,10 @@ const FilterScreen = ({ navigation }: any) => {
     try {
       console.log(selectedCategories.map(category => category.id));
       const categoryQuery = selectedCategories.map(category => category.id).join(',');
-      let queryParams = `c=${categoryQuery}`;
+      let queryParams = '';
+      if (selectedCategories.length > 0) {
+        queryParams = `c=${categoryQuery}`;
+      }
 
       if (selectedAccount !== null && favourites === true) {
         queryParams += `&fav=${favourites}`;
@@ -69,7 +73,16 @@ const FilterScreen = ({ navigation }: any) => {
       }
 
       const response = await api.get(`/search/details?${queryParams}`);
-      const markets = response.data;
+      let markets = response.data;
+
+      if (selectedStatus.includes('Active') && selectedStatus.includes('Ended')) {
+        console.log('Invalid selectedStatus: cannot have both active and ended.');
+        return [];
+      } else if (selectedStatus.includes('Active') && queryParams.length > 0) {
+        markets = markets.filter((market: any) => market.isActive === true);
+      } else if (selectedStatus.includes('Ended') && queryParams.length > 0) {
+        markets = markets.filter((market: any) => market.isActive === false);
+      }
 
       const marketsWithStats = await Promise.all(
         markets.map(async (market: any) => {
@@ -78,16 +91,16 @@ const FilterScreen = ({ navigation }: any) => {
         })
       );
       const sortedMarkets = marketsWithStats.sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();  
-        const dateB = new Date(b.createdAt).getTime(); 
-      
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+
         if (sortOption === 'Newest') {
-          return dateB - dateA; 
+          return dateB - dateA;
         } else {
-          return dateA - dateB; 
+          return dateA - dateB;
         }
       });
-      
+
 
       return sortedMarkets;
       // return marketsWithStats;
@@ -235,14 +248,25 @@ const FilterScreen = ({ navigation }: any) => {
         <Icon name="chevron-down-outline" size={20} />
       </TouchableOpacity>
 
-      <View style={styles.filterContainer}>
-        <Text>Favourite</Text>
-        <Switch value={favourites} onValueChange={setfavourites} />
-      </View>
-
+      {selectedAccount && (
+        <View style={styles.filterContainer}>
+          <Text>Favourite</Text>
+          <Switch value={favourites} onValueChange={setfavourites} />
+        </View>
+      )}
       <TouchableOpacity
         style={styles.showMarketsButton}
         onPress={async () => {
+          const allSelected = [
+            ...selectedCategories,
+            ...selectedStatus,
+            ...selectedCurrency,
+          ];
+
+          if (allSelected.length === 0 && favourites === false) {
+            ToastAndroid.show('Please select at least one filter option', ToastAndroid.SHORT);
+            return;
+          }
           setLoading(true);
           setError(null);
 

@@ -19,6 +19,8 @@ const CateFilterModal = ({
     typeFilter: string;
 }) => {
     const [categories, setCategories] = useState<Category[][]>([]);
+    const [statuses, setStatuses] = useState<Status[]>(['Active', 'Ended']);
+    const [currencies, setCurrencies] = useState<Currency[]>(['SOL']);
     const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
     const [selectedStatus, setSelectedStatus] = useState<Status[]>([]);
     const [selectedCurrency, setSelectedCurrency] = useState<Currency[]>([]);
@@ -30,14 +32,14 @@ const CateFilterModal = ({
 
             if (Array.isArray(categoryData)) {
                 const groupedCategories: Category[][] = [];
-                const groupSize = 2; // Số danh mục trên mỗi hàng
+                const groupSize = 2;
 
                 for (let i = 0; i < categoryData.length; i += groupSize) {
                     const group = categoryData.slice(i, i + groupSize);
                     groupedCategories.push(group);
                 }
 
-                setCategories(groupedCategories); // Lưu vào state
+                setCategories(groupedCategories);
             } else {
                 console.error('API không trả về đúng định dạng mảng:', categoryData);
             }
@@ -46,20 +48,13 @@ const CateFilterModal = ({
         }
     };
 
-
-
     useEffect(() => {
         if (typeFilter === 'Category') {
             fetchCategories();
-        } else if (typeFilter === 'Status') {
-
-        } else if (typeFilter === 'Currency') {
-
         }
     }, [typeFilter]);
 
     const toggleSelection = (item: any) => {
-
         if (typeFilter === 'Category') {
             if (selectedCategories.includes(item)) {
                 setSelectedCategories(selectedCategories.filter((category) => category !== item));
@@ -87,30 +82,69 @@ const CateFilterModal = ({
                 <View style={styles.categoryContainer}>
                     <Text style={styles.categoryTitle}>{typeFilter}</Text>
                     <View style={styles.categories}>
-                        {categories.map((row, rowIndex) => (
-                            <View key={rowIndex} style={styles.categoryRow}>
-                                {row.map((item: Category, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={styles.categoryButton}
-                                        onPress={() => toggleSelection(item)}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.categoryText,
-                                                selectedCategories.includes(item)
-                                                    ? styles.selectedCategoryText
-                                                    : {},
-                                            ]}
+                        {typeFilter === 'Category' &&
+                            categories.map((row, rowIndex) => (
+                                <View key={rowIndex} style={styles.categoryRow}>
+                                    {row.map((item: Category, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={styles.categoryButton}
+                                            onPress={() => toggleSelection(item)}
                                         >
-                                            {item.name}
-                                            {selectedCategories.includes(item) ? ' ✕' : ''}
-                                        </Text>
-
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        ))}
+                                            <Text
+                                                style={[
+                                                    styles.categoryText,
+                                                    selectedCategories.includes(item)
+                                                        ? styles.selectedCategoryText
+                                                        : {},
+                                                ]}
+                                            >
+                                                {item.name}
+                                                {selectedCategories.includes(item) ? ' ✕' : ''}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            ))}
+                        {typeFilter === 'Status' &&
+                            statuses.map((status, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.statusButton}
+                                    onPress={() => toggleSelection(status)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.categoryText,
+                                            selectedStatus.includes(status)
+                                                ? styles.selectedCategoryText
+                                                : {},
+                                        ]}
+                                    >
+                                        {status.charAt(0).toUpperCase() + status.slice(1)}{' '}
+                                        {selectedStatus.includes(status) ? '✕' : ''}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        {typeFilter === 'Currency' &&
+                            currencies.map((currency, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.categoryButton}
+                                    onPress={() => toggleSelection(currency)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.categoryText,
+                                            selectedCurrency.includes(currency)
+                                                ? styles.selectedCategoryText
+                                                : {},
+                                        ]}
+                                    >
+                                        {currency} {selectedCurrency.includes(currency) ? '✕' : ''}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                     </View>
                 </View>
 
@@ -134,16 +168,17 @@ const CateFilterModal = ({
     );
 };
 
+
 export default CateFilterModal;
 
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        justifyContent: 'flex-end', // Đặt modal ở phía dưới
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Hiệu ứng nền trong suốt
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        height: '50%', // Modal chiếm một nửa chiều cao màn hình
+        height: '50%',
         backgroundColor: 'white',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -186,6 +221,12 @@ const styles = StyleSheet.create({
     },
     categoryButton: {
         flex: 1,
+        alignItems: 'center',
+        paddingVertical: 5,
+    },
+    statusButton: {
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 5,
     },

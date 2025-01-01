@@ -107,12 +107,6 @@ const HomeScreen2 = ({ navigation, route }: any) => {
 
         <View style={styles.tabContainer}>
           {/* Thay đổi thứ tự hiển thị các tab */}
-          {/* <TouchableOpacity
-            style={[styles.tab, selectedTab === 'All' && styles.activeTab]}
-            onPress={() => setSelectedTab('All')}
-          > */}
-            {/* <Text style={styles.tabText}>All</Text>
-          </TouchableOpacity> */}
           <TouchableOpacity
             style={[styles.tab, selectedTab === 'Trending' && styles.activeTab]}
             onPress={() => setSelectedTab('Trending')}
@@ -155,15 +149,7 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                 />
               ))}
             </ScrollView>
-          ) : selectedTab === 'All' ? (
-            <>
-
-            </>
-          ) : selectedTab === 'Newest' ? (
-            <>
-
-            </>
-          ) : (
+          ) : selectedTab === 'Favorite' ? (
             <>
               <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
                 {marketFavoriteData.map((market: any) => (
@@ -180,6 +166,31 @@ const HomeScreen2 = ({ navigation, route }: any) => {
                   />
                 ))}
               </ScrollView>
+            </>
+          ) : selectedTab === 'Newest' ? (
+            <>
+              <ScrollView horizontal={false} showsVerticalScrollIndicator={false}>
+                {marketData
+                  .slice()
+                  .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .map((market: any) => (
+                    <CardItem
+                      key={market.publicKey}
+                      publicKey={market.publicKey}
+                      title={market.title}
+                      startDate={market.createdAt}
+                      coverUrl={market.coverUrl}
+                      participants={market.participants}
+                      totalVolume={market.totalVolume}
+                      marketStats={market.marketStats}
+                      favourites={favourites}
+                    />
+                  ))}
+              </ScrollView>
+            </>
+          ) : (
+            <>
+
             </>
           )}
         </View>

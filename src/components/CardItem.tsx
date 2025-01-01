@@ -93,6 +93,7 @@ const CardItem: React.FC<CardItems> = ({ publicKey, title, startDate, coverUrl, 
 
     const handlePress = () => {
         upView(publicKey);
+        console.log('Pressed:', publicKey);
         navigation.navigate('DetailMarket', { publicKeyMarket: publicKey });
     };
 

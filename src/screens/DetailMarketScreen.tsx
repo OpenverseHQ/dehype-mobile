@@ -38,7 +38,8 @@ interface DetailMarketScreenProps {
 
 const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const { selectedAccount } = useAuthorization();
-  const address = selectedAccount.publicKey;
+  const defaultPublicKey: PublicKey = new PublicKey('2a6uU2UfXtNd5NS9Vyzr8WmzS9HHEjfuVeFiBfoBTDRp')
+  const address = selectedAccount ? selectedAccount.publicKey : defaultPublicKey;
   const [amount, setAmount] = useState('0');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState<any>(null);
@@ -47,7 +48,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [market, setMarket] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState('Comment');
   const [isLiked, setIsLiked] = useState(false);
-  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ address }); // refetch để lấy lại số dư
+  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ address }); 
   const [Balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false); // Trạng thái refresh
@@ -85,8 +86,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
     }
   };
   const onRefresh = async () => {
-    setIsRefreshing(true); 
-    await fetchMarketData();    
+    setIsRefreshing(true);
+    await fetchMarketData();
     await refetchBalance();
     setIsRefreshing(false);
   };
@@ -98,7 +99,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   useEffect(() => {
     if (balanceData) {
       const newBalance = lamportsToSol(balanceData);
-      setBalance(newBalance);  
+      setBalance(newBalance);
     }
   }, [balanceData]);
 
@@ -152,6 +153,24 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
 
   const handlePressRow = (item: any, index) => {
     console.log('Selected outcome:', index);
+    if(!selectedAccount) {  
+      Toast.show({
+        type: 'info',
+        text1: 'Login Required',
+        text2: 'Please login to place a bet',
+        visibilityTime: 8000,
+      });
+      return;
+    }
+    if(market.isActive === false) {
+      Toast.show({
+        type: 'info',
+        text1: 'Market Closed',
+        text2: 'This market is closed for betting',
+        visibilityTime: 8000,
+      });
+      return;
+    }
     setSelectedOutcome({ ...item, index });
     setModalVisible(true);
   };
@@ -165,8 +184,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       keyExtractor={(item) => item.option}
       showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl
-        refreshing={isRefreshing}  
-        onRefresh={onRefresh}     
+        refreshing={isRefreshing}
+        onRefresh={onRefresh}
       />}
       ListHeaderComponent={
         <>
@@ -195,8 +214,8 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                 <Text style={{ fontSize: 12 }}>{market.creator.toString().slice(0, 12)}...</Text>
               </View>
             </View>
-            <Image style={{ width: 20, height: 20, marginRight: 10 }} source={{ uri: market.coverUrl }} />
-            <Icon name='check-circle-outline' size={20} color={'green'} />
+            <Image style={{ width: 20, height: 20, marginRight: 5 }} source={{ uri: market.coverUrl }} />
+            {/* <Icon name='check-circle-outline' size={20} color={'green'} /> */}
             <TouchableOpacity onPress={toggleHeartColor} style={{ margin: 10 }}>
               <Icon
                 name='heart'
@@ -204,6 +223,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                 size={20}
               />
             </TouchableOpacity>
+            <Icon name='tag' size={20} color={market.isActive ? '#02c720' : 'red'} />
           </View>
 
           <View style={styles.table}>

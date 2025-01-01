@@ -81,22 +81,6 @@
           }
         },
         {
-          "name": "outcomeTokenNames",
-          "type": {
-            "option": {
-              "vec": "string"
-            }
-          }
-        },
-        {
-          "name": "outcomeTokenLogos",
-          "type": {
-            "option": {
-              "vec": "string"
-            }
-          }
-        },
-        {
           "name": "serviceFeePercentage",
           "type": "u64"
         },
@@ -208,7 +192,10 @@
           "name": "config",
           "isMut": false,
           "isSigner": false,
-          "relations": ["owner", "service_fee_account"]
+          "relations": [
+            "owner",
+            "service_fee_account"
+          ]
         },
         {
           "name": "marketAccount",
@@ -473,14 +460,6 @@
             "type": "u64"
           },
           {
-            "name": "outcomeTokenName",
-            "type": "string"
-          },
-          {
-            "name": "outcomeTokenLogo",
-            "type": "string"
-          },
-          {
             "name": "totalVotes",
             "type": "u64"
           }
@@ -538,42 +517,7 @@
           "index": false
         },
         {
-          "name": "marketKey",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "index": false
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "index": false
-        },
-        {
-          "name": "coverUrl",
-          "type": "string",
-          "index": false
-        },
-        {
-          "name": "creatorFeePercentage",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "timestamp",
-          "type": "i64",
-          "index": false
-        }
-      ]
-    },
-    {
-      "name": "CreateMarketEvent",
-      "fields": [
-        {
-          "name": "creator",
+          "name": "marketPubkey",
           "type": "publicKey",
           "index": false
         },
@@ -610,6 +554,46 @@
         {
           "name": "endTime",
           "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "MarketResolvedEvent",
+      "fields": [
+        {
+          "name": "marketKey",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "marketPubkey",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "correctAnswerKey",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "totalRewards",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "totalWinners",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "marketTitle",
+          "type": "string",
+          "index": false
+        },
+        {
+          "name": "answerName",
+          "type": "string",
           "index": false
         }
       ]
@@ -710,9 +694,14 @@
       "code": 6018,
       "name": "InvalidPercent",
       "msg": "Invalid percent"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidEndTime",
+      "msg": "End time must be after current time"
     }
   ],
   "metadata": {
-    "address": "9FXu3CrZNKgJPnJNkR9K2R5TK6vF1bwHrxcZwGprG5gT"
+    "address": "G4pGvEEUWvAG4gXNhU1e7UtAWxjDPA135SQJwbjfisnP"
   }
 }

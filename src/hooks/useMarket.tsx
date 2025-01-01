@@ -51,12 +51,13 @@ export function useMarketProgram() {
 
     // const { sendTransaction, signTransaction } = useWallet();
     const { signTransactions } = useMobileWallet();
-    const publicKey = selectedAccount.publicKey
+    const defaultPublicKey: PublicKey = new PublicKey('2a6uU2UfXtNd5NS9Vyzr8WmzS9HHEjfuVeFiBfoBTDRp')
+    const publicKey = selectedAccount ? selectedAccount.publicKey : defaultPublicKey;
 
     const { connection } = useConnection();
     const program = new Program(
         marketIDL as Idl,
-        "9FXu3CrZNKgJPnJNkR9K2R5TK6vF1bwHrxcZwGprG5gT",
+        "G4pGvEEUWvAG4gXNhU1e7UtAWxjDPA135SQJwbjfisnP",
         provider,
     );
     const queryClient = useQueryClient();
