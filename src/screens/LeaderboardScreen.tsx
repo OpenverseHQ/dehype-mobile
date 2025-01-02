@@ -24,11 +24,11 @@ const LeaderboardPage = () => {
       const endpoint =
         tab === 'Volume'
           ? '/statistics/most-betting'
-          : '/statistics/most-betting';
+          : '/statistics/most-profit';
       const response = await api.get(endpoint);
       setLeaderboardData(response.data);
     } catch (error) {
-      console.error('Error fetching leaderboard data:..', error);
+      console.log('Error fetching leaderboard data:..', error);
     } finally {
       setLoading(false);
     }

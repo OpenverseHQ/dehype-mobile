@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import api from '../api/registerAccountApi';
+import { on } from 'events';
 type Category = {
     id: string;
     name: string;
@@ -77,6 +78,8 @@ const CateFilterModal = ({
     };
 
     return (
+     <TouchableWithoutFeedback onPress={onClose}>
+        
         <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
                 <View style={styles.categoryContainer}>
@@ -165,6 +168,7 @@ const CateFilterModal = ({
                 </TouchableOpacity>
             </View>
         </View>
+        </TouchableWithoutFeedback>
     );
 };
 

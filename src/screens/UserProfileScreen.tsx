@@ -31,7 +31,6 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route, navigation
     console.log('Địa chỉ người dùng mới của tauuuuuuuuuuu:', address);
     const [loading, setLoading] = useState(true);
     const { selectedAccount } = useAuthorization();
-    console.log('nick chinhhhh:', selectedAccount.publicKey)
     const [error, setError] = useState('');
     // const navigation = useNavigation<NavigationProp<RootStackParamList>>();
     const [betHistory, setBetHistory] = useState(null);
@@ -59,10 +58,10 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route, navigation
                     const result = response.data;
                     setBetHistory(result);
                 } else {
-                    console.warn("User info không chứa walletAddress. Không thể lấy lịch sử đặt cược.");
+                    console.log("User info không chứa walletAddress. Không thể lấy lịch sử đặt cược.");
                 }
             } catch (error) {
-                console.error("Error fetching user profile or bet history:", error);
+                console.log("Error fetching user profile or bet history:", error);
                 setError("Failed to fetch user data or bet history");
             } finally {
                 setLoading(false);
@@ -70,102 +69,109 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ route, navigation
         };
 
         fetchUserDataAndBetHistory();
-    }, [address]);
+    }, []);
 
     if (!betHistory) {
         return <Text style={styles.noBetText}>Loading...</Text>;
     }
 
     if (selectedAccount !== null && selectedAccount.publicKey.toString() === address) {
-        return <UserSignedInScreen address={selectedAccount.publicKey} navigation={navigation} />
+        return (
+            <View style={styles.container}>
+                <UserSignedInScreen address={selectedAccount.publicKey} navigation={navigation} />
+            </View>
+        );
     }
-    return (
-        <ScrollView style={styles.container}>
+    if (selectedAccount === null || selectedAccount.publicKey.toString() !== address) {
+        return (
+            <ScrollView style={styles.container}>
 
 
-            {/* Thông tin người dùng */}
-            <View style={styles.userInfo}>
+                {/* Thông tin người dùng */}
+                <View style={styles.userInfo}>
 
-                <Image
-                    source={{ uri: userInfo.avatarUrl }}
-                    style={styles.avatar}
-                />
-                <View>
-                    <Text style={styles.username}>{userInfo.username}</Text>
-                    <Text style={styles.wallet}>{userInfo.walletAddress}</Text>
+                    <Image
+                        source={{ uri: userInfo.avatarUrl }}
+                        style={styles.avatar}
+                    />
+                    <View>
+                        <Text style={styles.username}>{userInfo.username}</Text>
+                        <Text style={styles.wallet}>{userInfo.walletAddress}</Text>
+                    </View>
+
                 </View>
 
-            </View>
 
-
-            {/* Thẻ thống kê */}
-            <View style={styles.cardContainer}>
-                <TouchableOpacity
-                    style={styles.card}
-                >
-                    <Icon name="cash-outline" size={30} color="#000" />
-                    <Text style={styles.cardTitle}>Current balance</Text>
-                    <Text style={styles.cardValue}>...</Text>
-                </TouchableOpacity>
-                <View style={styles.card}>
-                    <Icon name="trending-down-outline" size={30} color="#000" />
-                    <Text style={styles.cardTitle}>Profit/loss</Text>
-                    <Text style={styles.cardValue}>{userInfo.profitLoss} SOL</Text>
-                </View>
-                <View style={styles.card}>
-                    <Icon name="bar-chart-outline" size={30} color="#000" />
-                    <Text style={styles.cardTitle}>Volume traded</Text>
-                    <Text style={styles.cardValue}>{userInfo.totalAmount.toFixed(2)} SOL</Text>
-                </View>
-                <View style={styles.card}>
-                    <Icon name="checkbox-outline" size={30} color="#000" />
-                    <Text style={styles.cardTitle}>Markets traded</Text>
-                    <Text style={styles.cardValue}>{userInfo.joinedMarkets}</Text>
-                </View>
-            </View>
-
-            {/* Activity */}
-            <View style={styles.profileFooter}>
-                <View style={styles.titleFooter}>
-                    <Text style={styles.titleText}>Activity</Text>
+                {/* Thẻ thống kê */}
+                <View style={styles.cardContainer}>
+                    <TouchableOpacity
+                        style={styles.card}
+                    >
+                        <Icon name="cash-outline" size={30} color="#000" />
+                        <Text style={styles.cardTitle}>Current balance</Text>
+                        <Text style={styles.cardValue}>...</Text>
+                    </TouchableOpacity>
+                    <View style={styles.card}>
+                        <Icon name="trending-down-outline" size={30} color="#000" />
+                        <Text style={styles.cardTitle}>Profit/loss</Text>
+                        <Text style={styles.cardValue}>{userInfo.profitLoss} SOL</Text>
+                    </View>
+                    <View style={styles.card}>
+                        <Icon name="bar-chart-outline" size={30} color="#000" />
+                        <Text style={styles.cardTitle}>Volume traded</Text>
+                        <Text style={styles.cardValue}>{userInfo.totalAmount.toFixed(2)} SOL</Text>
+                    </View>
+                    <View style={styles.card}>
+                        <Icon name="checkbox-outline" size={30} color="#000" />
+                        <Text style={styles.cardTitle}>Markets traded</Text>
+                        <Text style={styles.cardValue}>{userInfo.joinedMarkets}</Text>
+                    </View>
                 </View>
 
-                {betHistory.bets.length === 0 ? (
-                    <Text style={styles.noBetText}>The user has not placed a bet yet!</Text>
-                ) : (
-                    betHistory.bets.map((bet, index) => {
-                        const parsedTime = new Date(bet.createTime);
-                        const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
-                        return (
-                            <View key={index} style={styles.contentFooter}>
-                                <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKeyMarket: bet.marketPublicKey })}>
-                                    <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
-                                    <View>
-                                        <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
-                                        <View style={styles.dateBet}>
-                                            <Text style={styles.result}>Bought </Text>
-                                            <Text style={{ color: '#26ad5f' }}>
-                                                {bet.tokens}$ <Text style={{ color: '#666' }}>for</Text> {bet.answerKey}{' '}
-                                            </Text>
-                                            <Text style={styles.date}>{timeAgo} ago</Text>
+                {/* Activity */}
+                <View style={styles.profileFooter}>
+                    <View style={styles.titleFooter}>
+                        <Text style={styles.titleText}>Activity</Text>
+                    </View>
+
+                    {betHistory.bets.length === 0 ? (
+                        <Text style={styles.noBetText}>The user has not placed a bet yet!</Text>
+                    ) : (
+                        betHistory.bets.map((bet, index) => {
+                            const parsedTime = new Date(bet.createTime);
+                            const timeAgo = !isNaN(parsedTime.getTime()) ? formatDistanceToNow(parsedTime) : '';
+                            return (
+                                <View key={index} style={styles.contentFooter}>
+                                    <TouchableOpacity style={styles.leftFooter} onPress={() => navigation.navigate('DetailMarket', { publicKeyMarket: bet.marketPublicKey })}>
+                                        <Image source={{ uri: bet.marketCoverUrl }} style={styles.avatar} />
+                                        <View>
+                                            <Text style={styles.titleMarket}>{bet.marketTitle}</Text>
+                                            <View style={styles.dateBet}>
+                                                <Text style={styles.result}>Bought </Text>
+                                                <Text style={{ color: '#26ad5f' }}>
+                                                    {bet.tokens}$ <Text style={{ color: '#666' }}>for</Text> {bet.answerKey}{' '}
+                                                </Text>
+                                                <Text style={styles.date}>{timeAgo} ago</Text>
+                                            </View>
                                         </View>
-                                    </View>
 
-                                </TouchableOpacity>
-                            </View>
-                        );
-                    })
-                )}
-            </View>
-
+                                    </TouchableOpacity>
+                                </View>
+                            );
+                        })
+                    )}
+                </View>
 
 
-        </ScrollView>
-    );
+
+            </ScrollView>
+        );
+    }
 };
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
         padding: 10,
         backgroundColor: '#fff',
 

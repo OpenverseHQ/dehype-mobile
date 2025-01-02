@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch, Alert, ToastAndroid } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Switch, Alert, ToastAndroid, TouchableWithoutFeedback } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CateFilterModal from '../components/CateFilterModal';
 import api from '../api/registerAccountApi';
@@ -72,17 +72,17 @@ const FilterScreen = ({ navigation }: any) => {
         const auth = await handleGetAccess(selectedAccount.publicKey);
       }
 
-      const response = await api.get(`/search/details?${queryParams}`);
-      let markets = response.data;
-
       if (selectedStatus.includes('Active') && selectedStatus.includes('Ended')) {
-        console.log('Invalid selectedStatus: cannot have both active and ended.');
+        console.log('Invalid selectedStatus: cannot have both active and ended..');
         return [];
-      } else if (selectedStatus.includes('Active') && queryParams.length > 0) {
-        markets = markets.filter((market: any) => market.isActive === true);
-      } else if (selectedStatus.includes('Ended') && queryParams.length > 0) {
-        markets = markets.filter((market: any) => market.isActive === false);
+      } else if (selectedStatus.includes('Active')) {
+        queryParams += `active=true`;
+      } else if (selectedStatus.includes('Ended')) {
+        queryParams += `active=false`;
       }
+
+      const response = await api.get(`/search/details?${queryParams}`);
+      const markets = response.data;
 
       const marketsWithStats = await Promise.all(
         markets.map(async (market: any) => {

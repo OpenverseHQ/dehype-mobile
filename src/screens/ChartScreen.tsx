@@ -65,6 +65,8 @@ const ChartScreen: React.FC<ChartMarketScreenProps> = ({ idMarket }) => {
                 updatedChartData[name].push({ value, date: timestamp });
               }
             }
+            updatedChartData[name].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
           });
         });
         return updatedChartData;

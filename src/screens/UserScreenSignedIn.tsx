@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, RefreshControl, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';  // Import icon
 import Header from '../components/Header';
 import { formatDistanceToNow, parseISO, parse } from 'date-fns';
@@ -46,27 +46,6 @@ const UserSignedInScreen = ({ address, navigation }) => {
     "totalAmount": 0
   });
 
-    const fetchUserDetails = async () => {
-      try {
-        // Fetch user info
-        const userInfo = await handleGetUserInfo(address);
-        setUserInfo(userInfo);
-
-        // Fetch quantity favorite
-        const auth = await handleGetAccess(userInfo.walletAddress);
-        const response = await api.get('/search/details?fav=true');
-        setQuantity(response.data.length);
-
-        // Đảm bảo balance được cập nhật đúng
-        if (balanceData) {
-          const balance = lamportsToSol(balanceData).toString() + " SOL";
-          console.log('Số dư người dùng:', balance);
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
-    };
-
 
   const handlePress = useCallback(() => {
     navigation.navigate("UploadImageScreen", {
@@ -79,24 +58,47 @@ const UserSignedInScreen = ({ address, navigation }) => {
     });
   }, [navigation, userInfo]);
 
-  const fetchBetHistory = async () => {
-    const id = userInfo.walletAddress;
+  const fetchUserDataAndBetHistory = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/users/${id}/history`)
-      const result = response.data;
-      setBetHistory(result);
-    } catch (err) {
-      setError("Failed to fetch bet history");
+
+      const userDetailsPromise = (async () => {
+        // Fetch user info
+        const userInfo = await handleGetUserInfo(address);
+        setUserInfo(userInfo);
+
+        // Fetch quantity favorite
+        const auth = await handleGetAccess(userInfo.walletAddress);
+        const response = await api.get('/search/details?fav=true');
+        setQuantity(response.data.length);
+
+        if (balanceData) {
+          const balance = lamportsToSol(balanceData).toString() + " SOL";
+          console.log('Số dư người dùng:', balance);
+        }
+      })();
+
+      const betHistoryPromise = (async () => {
+        const id = userInfo.walletAddress;
+        const response = await api.get(`/users/${id}/history`);
+        const result = response.data;
+        setBetHistory(result);
+      })();
+
+      await Promise.all([userDetailsPromise, betHistoryPromise]);
+    } catch (error) {
+      console.log("Error fetching data:", error);
+      setError("Failed to fetch data");
     } finally {
       setLoading(false);
     }
   };
 
+
   useEffect(() => {
-    fetchUserDetails();
-    fetchBetHistory()
-  }, [navigation, address, balanceData]);
+    fetchUserDataAndBetHistory();
+    // fetchBetHistory()
+  }, []);
 
 
   if (!betHistory) {
@@ -104,7 +106,11 @@ const UserSignedInScreen = ({ address, navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={loading} onRefresh={fetchUserDataAndBetHistory} />
+      }
+    >
 
 
       {/* Thông tin người dùng */}

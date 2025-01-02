@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, Image, TextInput, ActivityIndicator, RefreshControl, Alert, TouchableWithoutFeedback } from 'react-native';
 import CommentMarketScreen from '../components/CommentMarket';
 import api from '../api/registerAccountApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -48,7 +48,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
   const [market, setMarket] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState('Comment');
   const [isLiked, setIsLiked] = useState(false);
-  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ address }); 
+  const { data: balanceData, refetch: refetchBalance } = useGetBalance({ address });
   const [Balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false); // Trạng thái refresh
@@ -153,7 +153,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
 
   const handlePressRow = (item: any, index) => {
     console.log('Selected outcome:', index);
-    if(!selectedAccount) {  
+    if (!selectedAccount) {
       Toast.show({
         type: 'info',
         text1: 'Login Required',
@@ -162,7 +162,7 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
       });
       return;
     }
-    if(market.isActive === false) {
+    if (market.isActive === false) {
       Toast.show({
         type: 'info',
         text1: 'Market Closed',
@@ -215,7 +215,6 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
               </View>
             </View>
             <Image style={{ width: 20, height: 20, marginRight: 5 }} source={{ uri: market.coverUrl }} />
-            {/* <Icon name='check-circle-outline' size={20} color={'green'} /> */}
             <TouchableOpacity onPress={toggleHeartColor} style={{ margin: 10 }}>
               <Icon
                 name='heart'
@@ -223,7 +222,24 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
                 size={20}
               />
             </TouchableOpacity>
-            <Icon name='tag' size={20} color={market.isActive ? '#02c720' : 'red'} />
+
+            <View
+              style={[
+                styles.tagAcive,
+                { borderColor: market.isActive ? '#02c720' : 'red' },
+              ]}
+            >
+              <Text
+                style={{
+                  color: market.isActive ? '#02c720' : 'red',
+                  fontWeight: 'bold',
+                }}
+              >
+                {market.isActive ? 'Active' : 'Ended'}
+              </Text>
+            </View>
+
+
           </View>
 
           <View style={styles.table}>
@@ -245,9 +261,9 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
         </TouchableOpacity>
       )}
       ListFooterComponent={
-        <View style={{ flex: 1 }}>
+        < View style={{ flex: 1 }}>
           {/* Phần biểu đồ */}
-          <ChartScreen idMarket={publicKeyMarket} />
+          < ChartScreen idMarket={publicKeyMarket} />
           <GeminiAIButton marketTitle={market.title} marketDescription={market.description} />
           {/* Phần mô tả thị trường */}
           <View style={styles.aboutContainer}>
@@ -285,72 +301,78 @@ const DetailMarketScreen: React.FC<DetailMarketScreenProps> = ({ route }) => {
             </TouchableOpacity>
           </View>
 
-          {selectedTab === 'Comment' ? (
-            <CommentMarketScreen idMarket={publicKeyMarket.toString()} />
-          ) : (
-            <BettingHistory idMarket={publicKeyMarket.toString()} />
-          )}
+          {
+            selectedTab === 'Comment' ? (
+              <CommentMarketScreen idMarket={publicKeyMarket.toString()} />
+            ) : (
+              <BettingHistory idMarket={publicKeyMarket.toString()} />
+            )
+          }
 
           {/* Modal hiển thị chi tiết khi nhấn vào một hàng */}
-          {selectedOutcome && (
-            <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <TouchableOpacity onPress={() => setModalVisible(false)}>
-                    <View style={styles.closeButton}></View>
-                  </TouchableOpacity>
-                  <View style={styles.modalHeader}>
-                    <Image style={{ flex: 1, marginRight: 5, width: 45, height: 45 }} source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png' }} />
-                    <View style={{ flex: 6 }}>
-                      <Text style={styles.modalTitle}>{selectedOutcome.option}</Text>
-                      <Text style={{ fontSize: 12 }}>
-                        Current balance: {Balance} SOL
-                      </Text>
-                    </View>
-                    <Text style={{ flex: 1.5, fontSize: 16 }}>{selectedOutcome.percentage}%</Text>
-                  </View>
-                  <View style={styles.buyContainer}>
-                    <View style={styles.buyHeader}>
-                      <Text style={styles.buyTitle}>You're Buying</Text>
-                      <Text style={styles.balance} numberOfLines={1}>{amount} SOL</Text>
-                      <View style={styles.valueButtons}>
-                        <TouchableOpacity style={styles.valueButton} onPress={() => setAmount((Balance / 2).toFixed(2))}>
-                          <Text style={styles.valueButtonText}>HALF</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={styles.valueButton}
-                          onPress={() => setAmount((Balance - 0.005).toFixed(4))}
-                        >
-                          <Text style={styles.valueButtonText}>MAX</Text>
-                        </TouchableOpacity>
+          {
+            selectedOutcome && (
+              <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+              >
+                <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                      <TouchableOpacity onPress={() => setModalVisible(false)}>
+                        <View style={styles.closeButton}></View>
+                      </TouchableOpacity>
+                      <View style={styles.modalHeader}>
+                        <Image style={{ flex: 1, marginRight: 5, width: 45, height: 45 }} source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png' }} />
+                        <View style={{ flex: 6 }}>
+                          <Text style={styles.modalTitle}>{selectedOutcome.option}</Text>
+                          <Text style={{ fontSize: 12 }}>
+                            Current balance: {Balance} SOL
+                          </Text>
+                        </View>
+                        <Text style={{ flex: 1.5, fontSize: 16 }}>{selectedOutcome.percentage}%</Text>
+                      </View>
+                      <View style={styles.buyContainer}>
+                        <View style={styles.buyHeader}>
+                          <Text style={styles.buyTitle}>You're Buying</Text>
+                          <Text style={styles.balance} numberOfLines={1}>{amount} SOL</Text>
+                          <View style={styles.valueButtons}>
+                            <TouchableOpacity style={styles.valueButton} onPress={() => setAmount((Balance / 2).toFixed(2))}>
+                              <Text style={styles.valueButtonText}>HALF</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={styles.valueButton}
+                              onPress={() => setAmount((Balance - 0.005).toFixed(4))}
+                            >
+                              <Text style={styles.valueButtonText}>MAX</Text>
+                            </TouchableOpacity>
 
+                          </View>
+                        </View>
+                        <View style={styles.buyBody}>
+                          <View style={styles.currencySelector}>
+                            <Image
+                              source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png' }}
+                              style={styles.currencyIcon}
+                            />
+                            <Text style={styles.currencyText}>SOL</Text>
+                          </View>
+                          <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
+                        </View>
+                        <TouchableOpacity style={styles.buyButton} onPress={() => handlePlaceBet({ amount: amount })}>
+                          <Text style={styles.buyButtonText}>Buy</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.networkFee}>Network fee: 0.00003 SOL</Text>
                       </View>
                     </View>
-                    <View style={styles.buyBody}>
-                      <View style={styles.currencySelector}>
-                        <Image
-                          source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png' }}
-                          style={styles.currencyIcon}
-                        />
-                        <Text style={styles.currencyText}>SOL</Text>
-                      </View>
-                      <TextInput style={styles.amountInput} placeholder='0' keyboardType="numeric" value={amount} onChangeText={setAmount} />
-                    </View>
-                    <TouchableOpacity style={styles.buyButton} onPress={() => handlePlaceBet({ amount: amount })}>
-                      <Text style={styles.buyButtonText}>Buy</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.networkFee}>Network fee: 0.00003 SOL</Text>
                   </View>
-                </View>
-              </View>
-            </Modal>
-          )}
-        </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+            )
+          }
+        </View >
       }
     />
   );
@@ -556,6 +578,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  tagAcive: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+    marginTop: 5
+  }
 });
 
 export default DetailMarketScreen;
